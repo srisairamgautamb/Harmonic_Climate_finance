@@ -35,7 +35,11 @@ def run_stationarity_tests(
 ) -> dict:
     """ADF and KPSS stationarity tests for a single variable."""
     try:
+<<<<<<< HEAD
         adf_result = adfuller(series.dropna(), maxlag=12, regression=regression)
+=======
+        adf_result = adfuller(series.dropna(), maxlags=12, regression=regression)
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
         adf_stat = float(adf_result[0])
         adf_pval = float(adf_result[1])
         adf_crit = {k: float(v) for k, v in adf_result[4].items()}

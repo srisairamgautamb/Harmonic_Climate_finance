@@ -1,0 +1,70 @@
+{
+  "start_date": "1990-01-01",
+  "end_date": "2023-12-01",
+  "T": 408,
+  "p": 9,
+  "m": 6,
+  "q_cl": 4,
+  "q_fin": 6,
+  "d": 25,
+  "driver_vars": [
+    "population_growth",
+    "urbanization_rate",
+    "fossil_fuel_consumption",
+    "electricity_demand",
+    "co2_emissions",
+    "methane_emissions",
+    "forest_cover_loss",
+    "trade_volume",
+    "military_spending"
+  ],
+  "climate_vars": [
+    "global_temp_anomaly",
+    "ocean_heat_content",
+    "enso_index",
+    "extreme_weather_freq",
+    "drought_index",
+    "sea_level_rise"
+  ],
+  "climate_risk_vars": [
+    "carbon_price_volatility",
+    "climate_policy_uncertainty",
+    "disaster_freq_volatility",
+    "temp_anomaly_variance"
+  ],
+  "financial_risk_vars": [
+    "vix",
+    "baa_aaa_spread",
+    "ted_spread",
+    "bank_equity_vol",
+    "energy_sector_returns",
+    "term_spread"
+  ],
+  "missing_pct_before_imputation": {
+    "population_growth": 0.0,
+    "urbanization_rate": 0.0,
+    "fossil_fuel_consumption": 0.0,
+    "electricity_demand": 0.0,
+    "co2_emissions": 0.0,
+    "methane_emissions": 0.0,
+    "forest_cover_loss": 0.0,
+    "trade_volume": 0.0,
+    "military_spending": 0.0,
+    "global_temp_anomaly": 0.0,
+    "ocean_heat_content": 0.0,
+    "enso_index": 0.0,
+    "extreme_weather_freq": 0.0,
+    "drought_index": 0.0,
+    "sea_level_rise": 0.0,
+    "carbon_price_volatility": 0.9240196078431373,
+    "climate_policy_uncertainty": 0.0,
+    "disaster_freq_volatility": 0.02696078431372549,
+    "temp_anomaly_variance": 0.02696078431372549,
+    "vix": 0.0,
+    "baa_aaa_spread": 0.0,
+    "ted_spread": 0.056372549019607844,
+    "bank_equity_vol": 0.12009803921568628,
+    "energy_sector_returns": 0.2647058823529412,
+    "term_spread": 0.0
+  }
+}

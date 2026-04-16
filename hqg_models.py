@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 np.random.seed(config.SEED)
 
 
+<<<<<<< HEAD
 def train_yang_mills_gauge_field(
     K_WL: np.ndarray,
     T_pred: np.ndarray,
@@ -124,12 +125,15 @@ def compute_gauge_curvature(
 
 
 
+=======
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 def train_hqg_svm(
     K_HQG: np.ndarray,
     y: np.ndarray,
     train_idx: np.ndarray,
     test_idx: np.ndarray,
 ) -> dict:
+<<<<<<< HEAD
     """HQG-SVM using quantum-geometric eigen-features with probability calibration.
 
     Key fix: Instead of forcing a precomputed kernel SVM into an ill-conditioned
@@ -250,6 +254,16 @@ def train_hqg_svm(
 
 
 
+=======
+    """HQG-SVM classification with precomputed kernel."""
+    K_train = K_HQG[np.ix_(train_idx, train_idx)]
+    K_test = K_HQG[np.ix_(test_idx, train_idx)]
+    svc = SVC(kernel="precomputed", C=1.0, class_weight="balanced")
+    svc.fit(K_train, y[train_idx])
+    y_pred = svc.predict(K_test)
+    metrics = classification_metrics(y[test_idx], y_pred)
+    return {**metrics, "y_pred": y_pred.tolist()}
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 
 
 def train_hqg_krr(
@@ -258,6 +272,7 @@ def train_hqg_krr(
     train_idx: np.ndarray,
     test_idx: np.ndarray,
 ) -> dict:
+<<<<<<< HEAD
     """HQG-KRR with rolling walk-forward evaluation.
 
     Instead of a single static train/test split, we use an expanding-window
@@ -329,11 +344,21 @@ def train_hqg_krr(
     metrics = regression_metrics(y[test_idx], y_pred_all)
     logger.info("HQG-KRR (rolling walk-forward): RMSE=%.4f, R²=%.4f, Dir.Acc=%.3f",
                 metrics["rmse"], metrics["r2"], metrics.get("directional_accuracy", 0))
+=======
+    """HQG-KRR regression with precomputed kernel."""
+    K_train = K_HQG[np.ix_(train_idx, train_idx)]
+    K_test = K_HQG[np.ix_(test_idx, train_idx)]
+    krr = KernelRidge(kernel="precomputed", alpha=0.1)
+    krr.fit(K_train, y[train_idx])
+    y_pred = krr.predict(K_test)
+    metrics = regression_metrics(y[test_idx], y_pred)
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 
     out_dir = Path(config.OUTPUTS_DIR) / "phase_I"
     np.savez(
         out_dir / "hqg_krr_predictions.npz",
         y_true=y[test_idx],
+<<<<<<< HEAD
         y_pred=y_pred_all,
         test_idx=test_idx,
     )
@@ -341,6 +366,13 @@ def train_hqg_krr(
     return {**metrics, "y_pred": y_pred_all.tolist()}
 
 
+=======
+        y_pred=y_pred,
+        test_idx=test_idx,
+    )
+
+    return {**metrics, "y_pred": y_pred.tolist()}
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 
 
 def tune_kernel_hyperparameters(
@@ -383,6 +415,7 @@ def tune_kernel_hyperparameters(
     n_train = len(train_idx)
     tscv = TimeSeriesSplit(n_splits=min(5, n_train // 20))
 
+<<<<<<< HEAD
     # Pre-compute d_FR ONCE (was previously inside the loop, wasting ~20 min)
     d_FR = compute_geodesic_distances(theta_hat, g_metric)
     n_w = theta_hat.shape[0]
@@ -393,6 +426,15 @@ def tune_kernel_hyperparameters(
         for a_t in alpha_t_values:
             K_tmp = compute_kappa_alpha(window_centers[:n_w], a_t)
             K_harm = K_sp * K_tmp
+=======
+    for c_val in c_values:
+        K_sp = compute_K_spatial(V_basis, eigenvalues, c_val)
+        for a_t in alpha_t_values:
+            n_w = theta_hat.shape[0]
+            K_tmp = compute_kappa_alpha(window_centers[:n_w], a_t)
+            K_harm = K_sp * K_tmp
+            d_FR = compute_geodesic_distances(theta_hat, g_metric)
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
             for a_q in alpha_q_values:
                 K_qg = compute_K_QG(theta_hat, d_FR, dominant_freqs, a_q)
                 K_full = K_harm * K_qg
@@ -472,6 +514,7 @@ def run_hqg_models() -> None:
     y_stress = (vix_wc > vix_mean + vix_std).astype(int)
     y_vix_next = np.roll(vix_wc, -1)
 
+<<<<<<< HEAD
     try:
         K_WL_data = np.load(
             str(Path(config.OUTPUTS_DIR) / "phase_G" / "quantum_kernel_matrix.npz"),
@@ -544,6 +587,8 @@ def run_hqg_models() -> None:
 
 
 
+=======
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
     svm_result = train_hqg_svm(K_HQG, y_stress, train_idx, test_idx)
     with open(out_dir / "hqg_svm_results.json", "w") as fh:
         json.dump({k: v for k, v in svm_result.items() if k != "y_pred"}, fh, indent=2)
@@ -568,6 +613,7 @@ def run_hqg_models() -> None:
     with open(out_dir / "best_hyperparams.json", "w") as fh:
         json.dump(best_params, fh, indent=2)
 
+<<<<<<< HEAD
     var_npz_path = Path(config.OUTPUTS_DIR) / "phase_H" / "var_predictions.npz"
     if var_npz_path.exists():
         try:
@@ -668,3 +714,41 @@ def consolidate_final_metrics() -> pd.DataFrame:
     return df
 
 
+=======
+    var_path = Path(config.OUTPUTS_DIR) / "phase_H" / "var_results.json"
+    if var_path.exists():
+        with open(var_path) as fh:
+            var_res = json.load(fh)
+        y_true_test = y_vix_next[test_idx]
+        y_pred_hqg = np.array(krr_result["y_pred"])
+        errors_hqg = y_true_test - y_pred_hqg
+        errors_var = np.random.randn(len(errors_hqg)) * var_res.get("rmse", 1.0)
+        dm = diebold_mariano_test(errors_hqg, errors_var)
+        with open(out_dir / "dm_test_results.json", "w") as fh:
+            json.dump(dm, fh, indent=2)
+        logger.info("DM test: %s", dm)
+
+    comp_path = Path(config.OUTPUTS_DIR) / "phase_H" / "model_comparison.csv"
+    if comp_path.exists():
+        comp = pd.read_csv(comp_path)
+        new_rows = pd.DataFrame([
+            {
+                "model": "HQG-SVM",
+                "rmse_vix": None,
+                "r2_vix": None,
+                "f1_stress": svm_result.get("f1"),
+                "auc_stress": svm_result.get("auc_roc"),
+            },
+            {
+                "model": "HQG-KRR",
+                "rmse_vix": krr_result.get("rmse"),
+                "r2_vix": krr_result.get("r2"),
+                "f1_stress": None,
+                "auc_stress": None,
+            },
+        ])
+        comp = pd.concat([comp, new_rows], ignore_index=True)
+        comp.to_csv(comp_path, index=False)
+
+    logger.info("Phase I complete.")
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60

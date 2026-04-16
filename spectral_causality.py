@@ -21,13 +21,17 @@ from statsmodels.tsa.vector_ar.var_model import VAR
 import config
 from utils import assert_shape, log_shape, save_npz
 
+<<<<<<< HEAD
 from scipy.signal import find_peaks
 
+=======
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 logger = logging.getLogger(__name__)
 
 np.random.seed(config.SEED)
 
 
+<<<<<<< HEAD
 def detect_harmonic_families(S_Z: np.ndarray, freqs: np.ndarray) -> dict:
     """Detect harmonic families from average power spectrum."""
     if S_Z.ndim == 4:
@@ -67,12 +71,15 @@ def detect_harmonic_families(S_Z: np.ndarray, freqs: np.ndarray) -> dict:
 
 
 
+=======
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 def fit_var_model(
     Z_train: np.ndarray,
     max_lags: int,
 ) -> object:
     """Fit VAR model on training data, selecting lag via AIC."""
     try:
+<<<<<<< HEAD
         Z_use = Z_train.copy()
         model = VAR(Z_use)
         try:
@@ -94,6 +101,15 @@ def fit_var_model(
             selected_lag = 1
 
         logger.info("VAR selected lag: %d", selected_lag)
+=======
+        model = VAR(Z_train)
+        lag_order = model.select_order(maxlags=max_lags)
+        selected_lag = lag_order.aic
+        if selected_lag < 1:
+            selected_lag = 1
+        logger.info("VAR selected lag: %d (AIC=%.2f)", selected_lag, lag_order.aic)
+        var_fit = model.fit(selected_lag)
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
         return var_fit
     except Exception as exc:
         logger.error("VAR fitting failed: %s", exc)
@@ -154,6 +170,7 @@ def geweke_spectral_gc(
         S_XY = S[np.ix_(x_idx, y_idx)]
 
         try:
+<<<<<<< HEAD
             # Apply slight diagonal stabilisation for singular/collinear series
             jitter = 1e-6 * np.eye(len(x_idx))
             jitter_y = 1e-6 * np.eye(len(y_idx))
@@ -168,6 +185,15 @@ def geweke_spectral_gc(
                 GC[fi] = max(gc_val, 0.0)
             else:
                 GC[fi] = 0.0
+=======
+            S_YY_given_X = S_YY - S_YX @ np.linalg.solve(S_XX, S_XY)
+
+            sign_full, log_det_full = np.linalg.slogdet(S_YY.real)
+            sign_cond, log_det_cond = np.linalg.slogdet(S_YY_given_X.real)
+
+            gc_val = log_det_full - log_det_cond
+            GC[fi] = max(gc_val, 0.0)
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
         except np.linalg.LinAlgError:
             GC[fi] = 0.0
 
@@ -229,6 +255,7 @@ def run_causality_analysis() -> None:
 
     var_fit = fit_var_model(Z_train, config.VAR_MAX_LAG)
 
+<<<<<<< HEAD
     try:
         aic_val = float(var_fit.aic)
         bic_val = float(var_fit.bic)
@@ -240,6 +267,12 @@ def run_causality_analysis() -> None:
         "selected_lag": int(var_fit.k_ar),
         "aic": aic_val,
         "bic": bic_val,
+=======
+    var_info = {
+        "selected_lag": int(var_fit.k_ar),
+        "aic": float(var_fit.aic),
+        "bic": float(var_fit.bic),
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
         "d": int(Z_hat.shape[1]),
     }
     with open(out_dir / "var_lag_order.json", "w") as fh:
@@ -313,8 +346,11 @@ def run_causality_analysis() -> None:
     with open(out_dir / "pair_names.json", "w") as fh:
         json.dump(pair_names, fh)
 
+<<<<<<< HEAD
     harm_fam = detect_harmonic_families(S_Z, freqs_500)
     with open(out_dir / "harmonic_families.json", "w") as fh:
         json.dump(harm_fam, fh, indent=2)
 
+=======
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
     logger.info("Phase C complete: %d causal pairs analysed.", len(pairs))

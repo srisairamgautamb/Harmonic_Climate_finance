@@ -1,0 +1,10 @@
+{
+  "spearman_rho": NaN,
+  "p_value": NaN,
+  "ci_95": [
+    NaN,
+    NaN
+  ],
+  "n_windows": 296,
+  "supported": false
+}

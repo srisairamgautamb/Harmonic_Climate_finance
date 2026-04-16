@@ -1,0 +1,127 @@
+{
+  "population_growth": {
+    "log": false,
+    "seasonal_diff": true,
+    "n_diffs": 1
+  },
+  "urbanization_rate": {
+    "log": false,
+    "seasonal_diff": true,
+    "n_diffs": 0
+  },
+  "fossil_fuel_consumption": {
+    "log": false,
+    "seasonal_diff": true,
+    "n_diffs": 1
+  },
+  "electricity_demand": {
+    "log": false,
+    "seasonal_diff": true,
+    "n_diffs": 0
+  },
+  "co2_emissions": {
+    "log": false,
+    "seasonal_diff": true,
+    "n_diffs": 0
+  },
+  "methane_emissions": {
+    "log": false,
+    "seasonal_diff": true,
+    "n_diffs": 0
+  },
+  "forest_cover_loss": {
+    "log": false,
+    "seasonal_diff": true,
+    "n_diffs": 0
+  },
+  "trade_volume": {
+    "log": false,
+    "seasonal_diff": true,
+    "n_diffs": 0
+  },
+  "military_spending": {
+    "log": false,
+    "seasonal_diff": true,
+    "n_diffs": 1
+  },
+  "global_temp_anomaly": {
+    "log": false,
+    "seasonal_diff": true,
+    "n_diffs": 0
+  },
+  "ocean_heat_content": {
+    "log": false,
+    "seasonal_diff": true,
+    "n_diffs": 0
+  },
+  "enso_index": {
+    "log": false,
+    "seasonal_diff": false,
+    "n_diffs": 0
+  },
+  "extreme_weather_freq": {
+    "log": false,
+    "seasonal_diff": true,
+    "n_diffs": 0
+  },
+  "drought_index": {
+    "log": false,
+    "seasonal_diff": true,
+    "n_diffs": 0
+  },
+  "sea_level_rise": {
+    "log": false,
+    "seasonal_diff": true,
+    "n_diffs": 1
+  },
+  "carbon_price_volatility": {
+    "log": false,
+    "seasonal_diff": false,
+    "n_diffs": 1
+  },
+  "climate_policy_uncertainty": {
+    "log": false,
+    "seasonal_diff": true,
+    "n_diffs": 0
+  },
+  "disaster_freq_volatility": {
+    "log": false,
+    "seasonal_diff": false,
+    "n_diffs": 1
+  },
+  "temp_anomaly_variance": {
+    "log": false,
+    "seasonal_diff": false,
+    "n_diffs": 0
+  },
+  "vix": {
+    "log": false,
+    "seasonal_diff": false,
+    "n_diffs": 0
+  },
+  "baa_aaa_spread": {
+    "log": false,
+    "seasonal_diff": false,
+    "n_diffs": 1
+  },
+  "ted_spread": {
+    "log": false,
+    "seasonal_diff": true,
+    "n_diffs": 0
+  },
+  "bank_equity_vol": {
+    "log": false,
+    "seasonal_diff": true,
+    "n_diffs": 0
+  },
+  "energy_sector_returns": {
+    "log": false,
+    "seasonal_diff": true,
+    "n_diffs": 1
+  },
+  "term_spread": {
+    "log": false,
+    "seasonal_diff": true,
+    "n_diffs": 0
+  }
+}

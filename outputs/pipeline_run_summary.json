@@ -1,0 +1,20 @@
+[
+  {
+    "phase": "H1",
+    "status": "ok",
+    "elapsed_seconds": 2.28,
+    "error_msg": null
+  },
+  {
+    "phase": "I1",
+    "status": "ok",
+    "elapsed_seconds": 0.03,
+    "error_msg": null
+  },
+  {
+    "phase": "J1",
+    "status": "error",
+    "elapsed_seconds": 1.5,
+    "error_msg": "x and y must have same first dimension, but have shapes (49,) and (79,)"
+  }
+]

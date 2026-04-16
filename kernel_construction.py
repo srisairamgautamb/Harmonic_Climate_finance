@@ -35,12 +35,15 @@ def compute_K_spatial(
     safe_lambda = np.where(np.abs(lambda_tilde) > 1e-12, lambda_tilde, 1e-12)
     K = V_basis @ np.diag(1.0 / safe_lambda) @ V_basis.T
     K = ensure_positive_definite(K, name="K_spatial")
+<<<<<<< HEAD
     
     # Spherical Normalisation to bound values strictly [-1, 1] with diagonal 1.0
     d = np.diag(K)
     d = np.where(d > 1e-12, d, 1e-12)
     K = K / np.sqrt(np.outer(d, d))
     
+=======
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
     log_shape(K, "K_spatial")
     return K
 
@@ -103,6 +106,7 @@ def compute_K_QG(
 ) -> np.ndarray:
     """Quantum geometric kernel using Matern-3/2 on geodesic distances.
 
+<<<<<<< HEAD
     Applies the Median Heuristic to prevent exponential collapse on massive manifolds.
     Guarantees positive definiteness by Schoenberg's theorem.
     """
@@ -116,12 +120,18 @@ def compute_K_QG(
     logger.info("Matern lengthscale (Median Heuristic): %.4e", dynamic_lengthscale)
 
     K_QG = _matern32_kernel(d_FR, lengthscale=dynamic_lengthscale)
+=======
+    Guarantees positive definiteness by Schoenberg's theorem.
+    """
+    K_QG = _matern32_kernel(d_FR, lengthscale=alpha_QG)
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
     K_QG = ensure_positive_definite(K_QG, name="K_QG")
     log_shape(K_QG, "K_QG")
     return K_QG
 
 
 def run_kernel_construction() -> None:
+<<<<<<< HEAD
     """Phase F1 entry point.
     
     Architecture fix: Use a convex combination kernel rather than Hadamard product.
@@ -130,6 +140,9 @@ def run_kernel_construction() -> None:
     This preserves the discriminative quantum signal which the Hadamard product
     was destroying by multiplying it by a near-degenerate K_Harm matrix.
     """
+=======
+    """Phase F1 entry point."""
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
     out_dir = Path(config.OUTPUTS_DIR) / "phase_F"
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -162,12 +175,16 @@ def run_kernel_construction() -> None:
     n_windows = theta_hat.shape[0]
     logger.info("n_windows=%d, theta_hat=%s", n_windows, theta_hat.shape)
 
+<<<<<<< HEAD
     # ── Component 1: Harmonic-Temporal kernel (geometric prior) ──
+=======
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
     K_spatial = compute_K_spatial(V_basis, eigenvalues, config.C_MASS)
     K_temporal = compute_kappa_alpha(
         window_centers[:n_windows].astype(float),
         config.ALPHA_TEMPORAL,
     )[:n_windows, :n_windows]
+<<<<<<< HEAD
     K_Harm = K_spatial * K_temporal
     K_Harm = ensure_positive_definite(K_Harm, name="K_Harm")
     # Normalise K_Harm to correlation scale so convex combination is balanced
@@ -250,9 +267,26 @@ def run_kernel_construction() -> None:
                 K_HQG[np.triu_indices(n_windows, k=1)].std(),
                 K_HQG[np.triu_indices(n_windows, k=1)].mean())
 
+=======
+
+    K_Harm = K_spatial * K_temporal
+    K_Harm = ensure_positive_definite(K_Harm, name="K_Harm")
+
+    d_FR = compute_geodesic_distances(theta_hat, g_metric)
+
+    dominant_freqs = freqs[:config.N_QUBITS] if len(freqs) >= config.N_QUBITS else freqs
+    K_QG = compute_K_QG(theta_hat, d_FR, dominant_freqs, config.ALPHA_QG)
+
+    K_HQG = K_Harm * K_QG
+    K_HQG = ensure_positive_definite(K_HQG, name="K_HQG")
+
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
     save_npz(str(out_dir / "K_Harm.npz"), K=K_Harm, d_FR=d_FR)
     save_npz(str(out_dir / "K_QG.npz"), K=K_QG)
     save_npz(str(out_dir / "K_HQG.npz"), K=K_HQG)
 
     logger.info("Phase F complete: K_Harm, K_QG, K_HQG saved.")
+<<<<<<< HEAD
 
+=======
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60

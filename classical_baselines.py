@@ -32,11 +32,17 @@ torch.manual_seed(config.SEED)
 
 def train_linear_spectral_regression(
     PHI_train: np.ndarray,
+<<<<<<< HEAD
     y_train_reg: np.ndarray,
     y_train_cls: np.ndarray,
     PHI_test: np.ndarray,
     y_test_reg: np.ndarray,
     y_test_cls: np.ndarray,
+=======
+    y_train: np.ndarray,
+    PHI_test: np.ndarray,
+    y_test: np.ndarray,
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 ) -> dict:
     """Ridge regression + Logistic regression on PCA-reduced spectral features."""
     pca = PCA(n_components=50, random_state=config.SEED)
@@ -44,6 +50,7 @@ def train_linear_spectral_regression(
     X_test = pca.transform(PHI_test)
 
     ridge = Ridge(alpha=1.0)
+<<<<<<< HEAD
     ridge.fit(X_train, y_train_reg)
     y_pred_reg = ridge.predict(X_test)
     reg_met = regression_metrics(y_test_reg, y_pred_reg)
@@ -54,17 +61,36 @@ def train_linear_spectral_regression(
     y_prob_cls = lr.predict_proba(X_test)[:, 1] if len(np.unique(y_train_cls)) > 1 else None
     
     cls_met = classification_metrics(y_test_cls, y_pred_cls, y_prob_cls)
+=======
+    ridge.fit(X_train, y_train)
+    y_pred_reg = ridge.predict(X_test)
+    reg_met = regression_metrics(y_test, y_pred_reg)
+
+    y_cls_train = (y_train > np.mean(y_train)).astype(int)
+    y_cls_test = (y_test > np.mean(y_test)).astype(int)
+    lr = LogisticRegression(max_iter=500, random_state=config.SEED)
+    lr.fit(X_train, y_cls_train)
+    y_pred_cls = lr.predict(X_test)
+    y_prob_cls = lr.predict_proba(X_test)[:, 1] if len(np.unique(y_cls_train)) > 1 else None
+    cls_met = classification_metrics(y_cls_test, y_pred_cls, y_prob_cls)
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 
     return {**reg_met, **{f"cls_{k}": v for k, v in cls_met.items()}}
 
 
 def train_rbf_svm(
     PHI_train: np.ndarray,
+<<<<<<< HEAD
     y_train_reg: np.ndarray,
     y_train_cls: np.ndarray,
     PHI_test: np.ndarray,
     y_test_reg: np.ndarray,
     y_test_cls: np.ndarray,
+=======
+    y_train: np.ndarray,
+    PHI_test: np.ndarray,
+    y_test: np.ndarray,
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 ) -> dict:
     """RBF-SVM regression and classification."""
     pca = PCA(n_components=50, random_state=config.SEED)
@@ -72,6 +98,7 @@ def train_rbf_svm(
     X_test = pca.transform(PHI_test)
 
     svr = SVR(kernel="rbf", C=10.0, gamma="scale")
+<<<<<<< HEAD
     svr.fit(X_train, y_train_reg)
     y_pred_reg = svr.predict(X_test)
     reg_met = regression_metrics(y_test_reg, y_pred_reg)
@@ -81,17 +108,36 @@ def train_rbf_svm(
     y_pred_cls = svc.predict(X_test)
     y_prob_cls = svc.predict_proba(X_test)[:, 1] if len(np.unique(y_train_cls)) > 1 else None
     cls_met = classification_metrics(y_test_cls, y_pred_cls, y_prob_cls)
+=======
+    svr.fit(X_train, y_train)
+    y_pred_reg = svr.predict(X_test)
+    reg_met = regression_metrics(y_test, y_pred_reg)
+
+    y_cls_train = (y_train > np.mean(y_train)).astype(int)
+    y_cls_test = (y_test > np.mean(y_test)).astype(int)
+    svc = SVC(kernel="rbf", C=10.0, gamma="scale", probability=True, random_state=config.SEED)
+    svc.fit(X_train, y_cls_train)
+    y_pred_cls = svc.predict(X_test)
+    y_prob_cls = svc.predict_proba(X_test)[:, 1] if len(np.unique(y_cls_train)) > 1 else None
+    cls_met = classification_metrics(y_cls_test, y_pred_cls, y_prob_cls)
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 
     return {**reg_met, **{f"cls_{k}": v for k, v in cls_met.items()}}
 
 
 def train_random_forest(
     PHI_train: np.ndarray,
+<<<<<<< HEAD
     y_train_reg: np.ndarray,
     y_train_cls: np.ndarray,
     PHI_test: np.ndarray,
     y_test_reg: np.ndarray,
     y_test_cls: np.ndarray,
+=======
+    y_train: np.ndarray,
+    PHI_test: np.ndarray,
+    y_test: np.ndarray,
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 ) -> dict:
     """Random Forest regression."""
     pca = PCA(n_components=50, random_state=config.SEED)
@@ -99,9 +145,15 @@ def train_random_forest(
     X_test = pca.transform(PHI_test)
 
     rf = RandomForestRegressor(n_estimators=500, max_depth=8, random_state=config.SEED)
+<<<<<<< HEAD
     rf.fit(X_train, y_train_reg)
     y_pred = rf.predict(X_test)
     return regression_metrics(y_test_reg, y_pred)
+=======
+    rf.fit(X_train, y_train)
+    y_pred = rf.predict(X_test)
+    return regression_metrics(y_test, y_pred)
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 
 
 class _LSTMModel(nn.Module):
@@ -119,11 +171,17 @@ class _LSTMModel(nn.Module):
 
 def train_lstm(
     PHI_train: np.ndarray,
+<<<<<<< HEAD
     y_train_reg: np.ndarray,
     y_train_cls: np.ndarray,
     PHI_test: np.ndarray,
     y_test_reg: np.ndarray,
     y_test_cls: np.ndarray,
+=======
+    y_train: np.ndarray,
+    PHI_test: np.ndarray,
+    y_test: np.ndarray,
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 ) -> dict:
     """LSTM regression on raw spectral features."""
     seq_len = 1
@@ -131,7 +189,11 @@ def train_lstm(
     output_size = 1
 
     X_tr = torch.tensor(PHI_train, dtype=torch.float32).unsqueeze(1)
+<<<<<<< HEAD
     y_tr = torch.tensor(y_train_reg, dtype=torch.float32).unsqueeze(1)
+=======
+    y_tr = torch.tensor(y_train, dtype=torch.float32).unsqueeze(1)
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
     X_te = torch.tensor(PHI_test, dtype=torch.float32).unsqueeze(1)
 
     model = _LSTMModel(input_size, 64, output_size)
@@ -154,9 +216,15 @@ def train_lstm(
 
     out_dir = Path(config.OUTPUTS_DIR) / "phase_H"
     torch.save(model.state_dict(), out_dir / "lstm_model.pt")
+<<<<<<< HEAD
     np.savez(out_dir / "lstm_predictions.npz", y_true=y_test_reg, y_pred=y_pred)
 
     return regression_metrics(y_test_reg, y_pred)
+=======
+    np.savez(out_dir / "lstm_predictions.npz", y_true=y_test, y_pred=y_pred)
+
+    return regression_metrics(y_test, y_pred)
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 
 
 def train_var_forecast(
@@ -209,6 +277,11 @@ def compile_comparison_table() -> pd.DataFrame:
         ("phase_H", "RF", "rf_results.json"),
         ("phase_H", "LSTM", "lstm_results.json"),
         ("phase_H", "VAR", "var_results.json"),
+<<<<<<< HEAD
+=======
+        ("phase_G", "QSVM", "qsvm_results.json"),
+        ("phase_G", "QKR", "qkr_results.json"),
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
     ]:
         fpath = out_base / phase / fname
         if fpath.exists():
@@ -259,6 +332,7 @@ def run_classical_baselines() -> None:
         vix_wc = np.pad(vix_wc, (0, len(window_centers) - len(vix_wc)), mode="edge")
 
     y_vix_next = np.roll(vix_wc, -1)
+<<<<<<< HEAD
     
     # Compute proper rolling classification targets to match HQG
     vix_mean = pd.Series(vix_wc).rolling(12, min_periods=1).mean().values
@@ -272,6 +346,12 @@ def run_classical_baselines() -> None:
     y_test_reg = y_vix_next[test_idx]
     y_train_cls = y_stress[train_idx]
     y_test_cls = y_stress[test_idx]
+=======
+    PHI_train = PHI[train_idx]
+    PHI_test = PHI[test_idx]
+    y_train = y_vix_next[train_idx]
+    y_test = y_vix_next[test_idx]
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 
     for name, fn in [
         ("LSR", train_linear_spectral_regression),
@@ -280,7 +360,11 @@ def run_classical_baselines() -> None:
         ("LSTM", train_lstm),
     ]:
         logger.info("Training %s ...", name)
+<<<<<<< HEAD
         result = fn(PHI_train, y_train_reg, y_train_cls, PHI_test, y_test_reg, y_test_cls)
+=======
+        result = fn(PHI_train, y_train, PHI_test, y_test)
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
         fname = name.lower().replace("-", "_") + "_results.json"
         with open(out_dir / fname, "w") as fh:
             json.dump(result, fh, indent=2)
@@ -289,6 +373,7 @@ def run_classical_baselines() -> None:
     Z_hat = pd.read_csv(proc_dir / "Z_hat.csv", index_col=0, parse_dates=True)
     Z_vals = Z_hat.values
     q_fin = len(config.FINANCIAL_RISK_VARS)
+<<<<<<< HEAD
 
     # CRITICAL FIX: Align VAR to the same window-center test indices as HQG.
     # Use window_centers to index Z_hat so all 7 models share an identical test set.
@@ -302,10 +387,20 @@ def run_classical_baselines() -> None:
     logger.info("Training VAR forecast on aligned windows (train=%d, test=%d)...",
                 len(train_idx), len(test_idx))
     var_result = train_var_forecast(Z_train_wc, Z_test_wc, q_fin)
+=======
+    Z_train_var = Z_vals[: split["train_end"]]
+    Z_test_var = Z_vals[split["train_end"] :]
+
+    logger.info("Training VAR forecast ...")
+    var_result = train_var_forecast(Z_train_var, Z_test_var, q_fin)
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
     with open(out_dir / "var_results.json", "w") as fh:
         json.dump(var_result, fh, indent=2)
     logger.info("  VAR: %s", var_result)
 
     compile_comparison_table()
     logger.info("Phase H complete.")
+<<<<<<< HEAD
 
+=======
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60

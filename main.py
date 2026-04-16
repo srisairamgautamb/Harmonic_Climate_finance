@@ -80,7 +80,10 @@ def run_pipeline(phases: list[str]) -> None:
     import spectral_estimation
     import var_spectral_param
     import visualization
+<<<<<<< HEAD
     import topological_analysis
+=======
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 
     ALL_PHASES: dict[str, Callable[[], None]] = {
         "A2": data_download.download_all_data,
@@ -93,7 +96,10 @@ def run_pipeline(phases: list[str]) -> None:
         "F1": kernel_construction.run_kernel_construction,
         "G1": quantum_embedding.run_quantum_embedding,
         "H1": classical_baselines.run_classical_baselines,
+<<<<<<< HEAD
         "T1": topological_analysis.run_topological_analysis,
+=======
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
         "I1": hqg_models.run_hqg_models,
         "J1": visualization.run_all_visualizations,
     }
@@ -144,7 +150,11 @@ if __name__ == "__main__":
     create_directory_structure()
 
     ALL_CODES = ["A2", "A3", "A4", "B1", "C1", "D1",
+<<<<<<< HEAD
                  "E1", "F1", "G1", "H1", "T1", "I1", "J1"]
+=======
+                 "E1", "F1", "G1", "H1", "I1", "J1"]
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
     phases = args.phases
     if args.skip:
         base = ALL_CODES if "ALL" in phases else phases

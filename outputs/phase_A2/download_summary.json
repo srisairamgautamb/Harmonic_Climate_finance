@@ -1,0 +1,50 @@
+{
+  "downloads": [
+    {
+      "source": "World Bank",
+      "status": "ok"
+    },
+    {
+      "source": "FRED",
+      "status": "ok"
+    },
+    {
+      "source": "NASA GISS",
+      "status": "ok"
+    },
+    {
+      "source": "NOAA ENSO",
+      "status": "ok"
+    },
+    {
+      "source": "OWID CO2/CH4",
+      "status": "ok"
+    },
+    {
+      "source": "Yahoo Finance",
+      "status": "ok"
+    },
+    {
+      "source": "Sea Level",
+      "status": "ok"
+    },
+    {
+      "source": "Disaster Proxy",
+      "status": "ok"
+    },
+    {
+      "source": "SIPRI/Military",
+      "status": "ok"
+    }
+  ],
+  "data_audit": {
+    "population_growth": "real",
+    "vix": "real",
+    "anomaly": "real",
+    "nino34": "real",
+    "co2_mt": "real",
+    "ch4_mt_co2eq": "real",
+    "kbw_close": "real",
+    "xle_close": "real"
+  }
+}

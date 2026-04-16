@@ -201,6 +201,7 @@ def plot_kernels(
 
 
 def plot_model_comparison(comparison_df: pd.DataFrame) -> None:
+<<<<<<< HEAD
     """Figure 8: Publication-quality model comparison with fixed 7-model baseline."""
     _apply_style()
 
@@ -264,6 +265,35 @@ def plot_model_comparison(comparison_df: pd.DataFrame) -> None:
     fig.savefig(out, bbox_inches="tight")
     plt.close(fig)
     logger.info("Saved Figure 8: %s", out)
+=======
+    """Figure 8: grouped bar chart of model performance."""
+    _apply_style()
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5), dpi=_DPI)
+    models = comparison_df["model"].tolist()
+    x = np.arange(len(models))
+
+    if "rmse_vix" in comparison_df.columns:
+        vals = comparison_df["rmse_vix"].fillna(0).values
+        axes[0].bar(x, vals, color="steelblue")
+        axes[0].set_xticks(x)
+        axes[0].set_xticklabels(models, rotation=45, ha="right", fontsize=8)
+        axes[0].set_ylabel("RMSE (VIX)", fontsize=9)
+        axes[0].set_title("VIX Prediction RMSE", fontsize=10)
+
+    if "f1_stress" in comparison_df.columns:
+        vals = comparison_df["f1_stress"].fillna(0).values
+        axes[1].bar(x, vals, color="coral")
+        axes[1].set_xticks(x)
+        axes[1].set_xticklabels(models, rotation=45, ha="right", fontsize=8)
+        axes[1].set_ylabel("F1 Score", fontsize=9)
+        axes[1].set_title("Stress Classification F1", fontsize=10)
+
+    plt.tight_layout()
+    out = Path(config.OUTPUTS_DIR) / "phase_J" / "figures" / "fig8_model_comparison.pdf"
+    fig.savefig(out)
+    plt.close(fig)
+    logger.info("Saved %s", out)
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 
 
 def plot_oos_forecast(
@@ -398,12 +428,17 @@ def run_all_visualizations() -> None:
 
     # Figure 9: OOS Forecast
     y_pred_dict = {}  # {name: (dates, y_pred)}
+<<<<<<< HEAD
     y_test_full = None
     y_test_dates_full = None
     
     # Get full test dates
     test_size = 79 # From log: Preprocessing complete. T'=394, train=315, test=79
     y_test_dates_full = Z_hat.index[-test_size:]
+=======
+    y_actual = None
+    y_actual_dates = None
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 
     # Try loading various model predictions
     for phase, name, fname in [
@@ -417,16 +452,24 @@ def run_all_visualizations() -> None:
             yp = data["y_pred"]
             yt = data["y_true"]
             
+<<<<<<< HEAD
             if y_test_full is None:
                 y_test_full = yt # Assumed to be the full test set
             
             # Extract dates for this specific prediction
             if len(yp) == test_size:
                 dts = y_test_dates_full
+=======
+            # Extract dates for test set
+            test_idx = data.get("test_idx", None)
+            if test_idx is not None:
+                dts = Z_hat.index[test_idx]
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
             else:
                 dts = Z_hat.index[-len(yp):]
             
             y_pred_dict[name] = (dts, yp)
+<<<<<<< HEAD
 
     if y_test_full is not None:
         _apply_style()
@@ -462,6 +505,21 @@ def run_all_visualizations() -> None:
             alpha = 1.0 if "HQG" in name else 0.7
             
             ax.plot(dts, yp, label=name, linewidth=linewidth, color=color, alpha=alpha)
+=======
+            if y_actual is None:
+                y_actual = yt
+                y_actual_dates = dts
+
+    if y_actual is not None:
+        # Use the actual dates from the first model as base, but plot others on their own
+        _apply_style()
+        fig, ax = plt.subplots(figsize=_FIGSIZE, dpi=_DPI)
+        ax.plot(y_actual_dates, y_actual, label="Actual", linewidth=1.2, color="black")
+        
+        colors = ["tab:blue", "tab:orange", "tab:green", "tab:red"]
+        for i, (name, (dts, yp)) in enumerate(y_pred_dict.items()):
+            ax.plot(dts, yp, label=name, linewidth=0.8, color=colors[i % len(colors)])
+>>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 
         crisis = [
             ("2008-09", "2009-06", "GFC"),
