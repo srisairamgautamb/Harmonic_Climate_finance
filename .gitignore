@@ -36,3 +36,7 @@ outputs/phase_D/fisher_rao_metric.npz
 
 # Claude local settings
 .claude/
+
+# Excluded documentation
+Mathematical_Foundation.md
+Mathematics_Foundation.pages
