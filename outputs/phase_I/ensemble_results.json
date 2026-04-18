@@ -1,0 +1,9 @@
+{
+  "rmse": 0.988491601106232,
+  "r2": 0.2372305255742284,
+  "meta_weights": {
+    "HQG-KRR": 1.0,
+    "LSR": 0.0
+  },
+  "note": "NNLS stacking of HQG-KRR and LSR using OOF predictions (non-negative constrained)"
+}

@@ -47,7 +47,6 @@ def prepare_quantum_features(
     return x_norm
 
 
-<<<<<<< HEAD
 def _build_wilson_loop_ansatz(x: np.ndarray, n_qubits: int, M_trotter_steps: int) -> None:
     """Apply the Quantum Wilson-Loop Embedding using Data Re-uploading.
     
@@ -66,23 +65,6 @@ def _build_wilson_loop_ansatz(x: np.ndarray, n_qubits: int, M_trotter_steps: int
         # Include non-Abelian interaction equivalent terms
         for j in range(n_qubits - 1):
             qml.RY(x[j] * x[j + 1], wires=j)
-=======
-def _build_ansatz(x: np.ndarray, n_qubits: int, n_layers: int) -> None:
-    """Apply the Harmonic Phase Embedding circuit gates."""
-    for j in range(n_qubits):
-        qml.Hadamard(wires=j)
-    for j in range(n_qubits):
-        qml.RZ(x[j], wires=j)
-    for j in range(n_qubits - 1):
-        qml.CNOT(wires=[j, j + 1])
-    for j in range(n_qubits - 1):
-        qml.RZ(x[j] * x[j + 1], wires=j)
-    for layer in range(n_layers - 1):
-        for j in range(n_qubits):
-            qml.RY(x[j] / (layer + 2), wires=j)
-        for j in range(n_qubits - 1):
-            qml.CNOT(wires=[j, j + 1])
->>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 
 
 def compute_quantum_kernel_matrix(
@@ -97,7 +79,6 @@ def compute_quantum_kernel_matrix(
     n_qubits = x_encoded.shape[1]
     n_layers = config.N_LAYERS
 
-<<<<<<< HEAD
     # Primary: fast statevector simulator (mathematically exact)
     dev = qml.device("default.qubit", wires=n_qubits)
 
@@ -113,14 +94,6 @@ def compute_quantum_kernel_matrix(
     def kernel_circuit(x1: np.ndarray, x2: np.ndarray) -> float:
         _build_wilson_loop_ansatz(x1, n_qubits, n_layers)
         qml.adjoint(_build_wilson_loop_ansatz)(x2, n_qubits, n_layers)
-=======
-    dev = qml.device("default.qubit", wires=n_qubits)
-
-    @qml.qnode(dev)
-    def kernel_circuit(x1: np.ndarray, x2: np.ndarray) -> float:
-        _build_ansatz(x1, n_qubits, n_layers)
-        qml.adjoint(_build_ansatz)(x2, n_qubits, n_layers)
->>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
         return qml.probs(wires=range(n_qubits))
 
     def q_kernel(x1: np.ndarray, x2: np.ndarray) -> float:
@@ -157,7 +130,6 @@ def compute_quantum_kernel_matrix(
     log_shape(K_train, "K_Q_train")
     log_shape(K_test, "K_Q_test")
 
-<<<<<<< HEAD
     # ── Qiskit Aer cross-validation (hardware readiness proof) ──────────
     if qiskit_dev is not None:
         try:
@@ -189,8 +161,6 @@ def compute_quantum_kernel_matrix(
         except Exception as exc:
             logger.warning("Qiskit Aer validation failed: %s", exc)
 
-=======
->>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
     return {"K_train": K_train, "K_test": K_test}
 
 

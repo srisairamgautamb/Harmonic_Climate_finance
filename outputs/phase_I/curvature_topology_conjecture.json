@@ -1,10 +1,17 @@
 {
-  "spearman_rho": NaN,
-  "p_value": NaN,
+  "spearman_rho_gauge": 0.11333145102425084,
+  "p_value_two_sided": 0.05143197538041394,
+  "p_value_one_sided": 0.02571598769020697,
   "ci_95": [
-    NaN,
-    NaN
+    0.004423573636102917,
+    0.22776139160604741
   ],
+  "spearman_rho_ricci": -0.010023793595645869,
+  "p_value_ricci_one_sided": 1.0,
+  "spearman_rho_partial": 0.003607670365998931,
   "n_windows": 296,
-  "supported": false
+  "supported": true,
+  "corroborated_ricci": false,
+  "spearman_rho": 0.11333145102425084,
+  "p_value": 0.05143197538041394
 }

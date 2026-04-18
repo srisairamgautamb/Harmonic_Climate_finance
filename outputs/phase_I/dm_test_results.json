@@ -1,5 +1,12 @@
 {
-  "DM_stat": -0.4541,
-  "p_value": 0.6498,
-  "reject_H0_at_5pct": false
+  "DM_stat": -0.2099,
+  "p_value": 0.8338,
+  "reject_H0_at_5pct": false,
+  "clark_west": {
+    "CW_stat": 1.6896,
+    "p_value_one_sided": 0.0456,
+    "reject_H0_at_10pct": true,
+    "reject_H0_at_5pct": true,
+    "note": "Clark-West (2007) adjusted test for nested model comparison (LSR nested in HQG-KRR)"
+  }
 }

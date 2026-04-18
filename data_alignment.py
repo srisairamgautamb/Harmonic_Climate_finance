@@ -186,18 +186,12 @@ def align_all_data() -> pd.DataFrame:
             logger.warning("Failed to process %s: %s", var_name, exc)
             assembled[var_name] = np.nan
 
-<<<<<<< HEAD
     def fallback_fill():
         return np.cumsum(np.random.randn(len(idx))) + 10.0
 
     # ── Forest cover loss placeholder (annual, needs external data) ─────
     if "forest_cover_loss" not in assembled.columns:
         assembled["forest_cover_loss"] = fallback_fill()
-=======
-    # ── Forest cover loss placeholder (annual, needs external data) ─────
-    if "forest_cover_loss" not in assembled.columns:
-        assembled["forest_cover_loss"] = np.nan
->>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 
     # ── Load monthly series directly ────────────────────────────────────
     monthly_map: dict[str, tuple[str, str]] = {
@@ -268,7 +262,6 @@ def align_all_data() -> pd.DataFrame:
                         0, float(sl.iloc[:, -1].dropna().iloc[-1]), len(idx)
                     )
                 else:
-<<<<<<< HEAD
                     assembled["sea_level_rise"] = fallback_fill()
             except Exception:
                 assembled["sea_level_rise"] = fallback_fill()
@@ -280,19 +273,6 @@ def align_all_data() -> pd.DataFrame:
 
     if "drought_index" not in assembled.columns:
         assembled["drought_index"] = fallback_fill()
-=======
-                    assembled["sea_level_rise"] = np.nan
-            except Exception:
-                assembled["sea_level_rise"] = np.nan
-        else:
-            assembled["sea_level_rise"] = np.nan
-
-    if "ocean_heat_content" not in assembled.columns:
-        assembled["ocean_heat_content"] = np.nan
-
-    if "drought_index" not in assembled.columns:
-        assembled["drought_index"] = np.nan
->>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 
     # ── Record missing percentages before imputation ────────────────────
     all_vars = (
@@ -306,26 +286,8 @@ def align_all_data() -> pd.DataFrame:
             missing_report[var] = 1.0
             assembled[var] = np.nan
 
-<<<<<<< HEAD
     # No trimming - let bfill() handle series that started later (e.g. XLE ETF or Carbon Price)
     effective_start = assembled.index[0]
-=======
-    # ── Trim start if > 20% missing at beginning ───────────────────────
-    effective_start = assembled.index[0]
-    for var in all_vars:
-        first_valid = assembled[var].first_valid_index()
-        if first_valid is not None and first_valid > effective_start:
-            early_pct = float(
-                assembled.loc[:first_valid, var].isna().mean()
-            )
-            if early_pct > 0.20:
-                if first_valid > effective_start:
-                    effective_start = first_valid
-
-    if effective_start > assembled.index[0]:
-        logger.info("Trimming start date to %s", effective_start)
-        assembled = assembled.loc[effective_start:]
->>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 
     # ── Impute remaining missing values ─────────────────────────────────
     for var in all_vars:

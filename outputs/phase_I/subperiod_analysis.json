@@ -1,0 +1,20 @@
+{
+  "split_index": 300,
+  "note": "pre/post index 300 (\u2248 COVID structural break)",
+  "pre_COVID": {
+    "n": 0,
+    "skipped": true
+  },
+  "post_COVID": {
+    "n": 52,
+    "HQG_KRR": {
+      "r2": 0.2372,
+      "rmse": 0.9885
+    },
+    "LSR": {
+      "r2": 0.1914,
+      "rmse": 1.0178
+    },
+    "HQG_advantage_r2": 0.0459
+  }
+}

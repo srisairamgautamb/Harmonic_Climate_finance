@@ -62,12 +62,9 @@ DATA_PROCESSED_DIR: str = "data/processed/"
 OUTPUTS_DIR: str = "outputs/"
 LOGS_DIR: str = "logs/"
 
-<<<<<<< HEAD
 # ── Data Mode ─────────────────────────────────────────────────────────
 USE_SYNTHETIC_DATA: bool = False
 
-=======
->>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 # ── Spectral parameters ────────────────────────────────────────────────
 WINDOW_SIZE: int = 60
 WINDOW_STEP: int = 1

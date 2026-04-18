@@ -98,14 +98,10 @@ def whittle_log_likelihood(
     I_periodogram: torch.Tensor,
     freqs: torch.Tensor,
 ) -> torch.Tensor:
-<<<<<<< HEAD
     """Whittle log-likelihood (scalar, differentiable).
     Defined as ell(theta) = -0.5 * sum [ln det S + Tr(S^{-1} I)].
     To maximize likelihood, we minimize -ell(theta).
     """
-=======
-    """Whittle log-likelihood (scalar, differentiable)."""
->>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
     d_U = I_periodogram.shape[1]
     p_0 = (theta.shape[0] - d_U * (d_U - 1) // 2 - d_U) // (d_U * d_U)
     S = var_to_spectral(theta, freqs, d_U, p_0)
@@ -119,11 +115,7 @@ def whittle_log_likelihood(
         sign, logdet = torch.linalg.slogdet(S_f)
         S_inv = torch.linalg.inv(S_f)
         trace = torch.real(torch.trace(S_inv @ I_f))
-<<<<<<< HEAD
         ll = ll - 0.5 * (logdet.real + trace)
-=======
-        ll = ll - logdet.real - trace
->>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 
     return ll
 
@@ -150,11 +142,7 @@ def fit_whittle_mle_window(
         x_t = torch.tensor(x_np, dtype=torch.float64, requires_grad=True)
         try:
             ll = whittle_log_likelihood(x_t, I_t, freqs_t)
-<<<<<<< HEAD
             neg_ll = -ll  # Minimizing negative log-likelihood
-=======
-            neg_ll = -ll
->>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
             neg_ll.backward()
             grad = x_t.grad.detach().numpy().copy()
             return float(neg_ll.detach()), grad
@@ -175,7 +163,6 @@ def fit_whittle_mle_window(
         return theta_init
 
 
-<<<<<<< HEAD
 def expected_whittle_nll(
     theta_opt: torch.Tensor,
     S_plug: torch.Tensor,
@@ -196,15 +183,12 @@ def expected_whittle_nll(
     return ll
 
 
-=======
->>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 def compute_fisher_rao_metric(
     theta: np.ndarray,
     freqs: np.ndarray,
     d_U: int,
     p_0: int,
 ) -> np.ndarray:
-<<<<<<< HEAD
     """Compute the Fisher-Rao metric g_ij(theta) via numerical Hessian of expected NLL."""
     try:
         theta_t = torch.tensor(theta, dtype=torch.float64, requires_grad=True)
@@ -230,15 +214,6 @@ def compute_fisher_rao_metric(
     except Exception as exc:
         logger.warning("Fisher-Rao analytic failed (%s), returning Identity", exc)
         return np.eye(len(theta))
-=======
-    """Compute the Fisher-Rao metric g_ij(theta) via numerical differentiation."""
-    k = len(theta)
-    # BYPASS: For rapid synthetic validation, return the identity metric.
-    # The true empirical calculation requires O(k^2) matrix inversions,
-    # which takes hours for k=1273.
-    logger.info("  [Bypass] Returning identity for g_ij to speed up dry-run")
-    return np.eye(k)
->>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 
 
 def run_var_spectral_param() -> None:
@@ -287,24 +262,13 @@ def run_var_spectral_param() -> None:
         if (wi + 1) % 20 == 0:
             logger.info("  Whittle MLE: window %d/%d", wi + 1, n_windows)
 
-<<<<<<< HEAD
     logger.info("Computing Fisher-Rao metric for %d windows ...", n_windows)
     g_metric_full = np.zeros((n_windows, k_param, k_param))
-=======
-    save_npz(str(out_dir / "theta_hat.npz"), theta_hat=theta_hat_all)
-
-    logger.info("Computing Fisher-Rao metric for %d windows ...", n_windows)
-    g_metric = np.zeros((n_windows, k_param, k_param))
->>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
     n_metric_windows = min(n_windows, 20)
     sample_idx = np.linspace(0, n_windows - 1, n_metric_windows, dtype=int)
 
     for si, wi in enumerate(sample_idx):
-<<<<<<< HEAD
         g_metric_full[wi] = compute_fisher_rao_metric(
-=======
-        g_metric[wi] = compute_fisher_rao_metric(
->>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
             theta_hat_all[wi], freqs, d_U, p_0,
         )
         if (si + 1) % 5 == 0:
@@ -313,7 +277,6 @@ def run_var_spectral_param() -> None:
     for wi in range(n_windows):
         if wi not in sample_idx:
             nearest = sample_idx[np.argmin(np.abs(sample_idx - wi))]
-<<<<<<< HEAD
             g_metric_full[wi] = g_metric_full[nearest]
 
     G_avg = np.mean(g_metric_full, axis=0)
@@ -343,11 +306,6 @@ def run_var_spectral_param() -> None:
         g_metric=g_metric_red, 
         g_metric_full=g_metric_full
     )
-=======
-            g_metric[wi] = g_metric[nearest]
-
-    save_npz(str(out_dir / "fisher_rao_metric.npz"), g_metric=g_metric)
->>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 
     q_fin = S_UF_all.shape[2] if len(S_UF_all.shape) >= 3 else config.q_fin or 6
     T_hat_emp = np.zeros((n_windows, n_freq, q_fin, d_U), dtype=complex)
@@ -367,11 +325,6 @@ def run_var_spectral_param() -> None:
     save_npz(str(out_dir / "T_hat_empirical.npz"), T_hat_empirical=T_hat_emp)
 
     logger.info(
-<<<<<<< HEAD
         "Phase D complete: theta_hat %s, g_metric_red %s, T_hat %s",
         theta_hat_all.shape, g_metric_red.shape, T_hat_emp.shape,
-=======
-        "Phase D complete: theta_hat %s, g_metric %s, T_hat %s",
-        theta_hat_all.shape, g_metric.shape, T_hat_emp.shape,
->>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
     )

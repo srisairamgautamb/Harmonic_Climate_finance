@@ -201,12 +201,8 @@ def classification_metrics(
         "f1": float(f1_score(y_true, y_pred, zero_division=0)),
     }
     if y_prob is not None:
-<<<<<<< HEAD
         try:
             metrics["auc_roc"] = float(roc_auc_score(y_true, y_prob))
         except ValueError:
             metrics["auc_roc"] = None
-=======
-        metrics["auc_roc"] = float(roc_auc_score(y_true, y_prob))
->>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
     return metrics

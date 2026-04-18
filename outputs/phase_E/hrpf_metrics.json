@@ -1,7 +1,7 @@
 {
-  "n_windows": 334,
+  "n_windows": 348,
   "n_basis": 20,
-  "n_time_basis": 10,
-  "sigma": 8.568116857833674,
-  "max_ricci": 0.0
+  "n_time_basis": 348,
+  "sigma": 1340306563.3015234,
+  "max_ricci": 2.5
 }

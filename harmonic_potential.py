@@ -10,10 +10,7 @@ analytically via the kernel trick rather than undefined autodiff on a
 NumPy eigendecomposition.
 """
 
-<<<<<<< HEAD
 import json
-=======
->>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 import logging
 from pathlib import Path
 
@@ -91,7 +88,6 @@ def project_to_curlfree(
     theta_hat: np.ndarray,
     lambda_reg: float = 1e-4,
 ) -> np.ndarray:
-<<<<<<< HEAD
     """Project vector field onto curl-free subspace via sparse GPR.
 
     Implements K_CF(θ_a, θ_b) = ∇_θ ∇_θ'ᵀ K_RBF(θ_a, θ_b).
@@ -149,11 +145,6 @@ def project_to_curlfree(
 
     logger.info("  Curl-free projection complete.")
     return T_curlfree
-=======
-    """Project vector field onto curl-free subspace via sparse GPR."""
-    logger.info("  [Bypass] Returning T_empirical directly to avoid 200GB+ OOM")
-    return T_empirical.copy()
->>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 
 
 def integrate_path_boundary(
@@ -182,7 +173,6 @@ def integrate_path_boundary(
     return Phi_boundary
 
 
-<<<<<<< HEAD
 def solve_wave_cauchy(
     Phi_boundary: np.ndarray,
     V_basis: np.ndarray,
@@ -243,99 +233,34 @@ def compute_T_predicted_freq(
     T_pred = np.zeros((n_windows, n_freq, d_U))
     freqs = np.fft.rfftfreq(config.WINDOW_SIZE)[1 : n_freq + 1]
 
-    # Gaussian windows around harmonics
+    # Gaussian harmonic windows Φ_h(ω) (Section 3.2)
+    # Width chosen as 1/(2*WINDOW_SIZE) so windows are well-separated.
+    freq_spacing = freqs[1] - freqs[0] if len(freqs) > 1 else 1.0
+    width_sq = (2.0 * freq_spacing) ** 2  # ~4 frequency bins wide
+
     H_omega = np.zeros(n_freq)
     for h_freq in harmonics_hz:
-        H_omega += np.exp(-((freqs - h_freq)**2) / (0.01))
-    
+        H_omega += np.exp(-((freqs - h_freq) ** 2) / width_sq)
+
+    # If no harmonics detected or all windows zero, fall back to flat weighting
+    # so T_pred carries signal from the potential gradient regardless.
+    H_max = H_omega.max()
+    if H_max < 1e-12:
+        logger.warning("All harmonic windows are zero — falling back to uniform weighting.")
+        H_omega = np.ones(n_freq)
+    else:
+        H_omega = H_omega / H_max  # normalise to [0, 1]
+
     for wi in range(n_windows):
         dV = eigenfunction_gradient(
             theta_hat[wi:wi+1], theta_hat, V_basis, eigenvalues, sigma,
         )
         t_coeff = c_coeffs[:, wi]
         grad_Phi = dV.T @ t_coeff
-        
-        # apply harmonic windows
+
+        # T_pred[wi, fi, :] = Φ_h(ω_fi) · ∂Φ/∂θ (Section 4.1)
         for fi in range(n_freq):
             T_pred[wi, fi, :] = H_omega[fi] * grad_Phi
-=======
-def solve_harmonic_dirichlet(
-    g_tilde: np.ndarray,
-    Phi_boundary: np.ndarray,
-    V_basis: np.ndarray,
-    psi_basis: np.ndarray,
-    lambda_harm: float = 1.0,
-    lambda_bc: float = 10.0,
-) -> np.ndarray:
-    """Solve harmonic Dirichlet problem via variational optimisation.
-
-    Represents Phi(theta, t) = sum_{s,l} c_{s,l} V_s(theta) psi_l(t).
-
-    Returns c_coeffs of shape [n_basis, n_time_basis].
-    """
-    n_basis = V_basis.shape[1]
-    n_time_basis = psi_basis.shape[1]
-    n_windows = V_basis.shape[0]
-    d_U = g_tilde.shape[1] if g_tilde.ndim == 2 else g_tilde.shape[0]
-
-    def objective(c_flat: np.ndarray) -> float:
-        c = c_flat.reshape(n_basis, n_time_basis)
-        Phi_pred = V_basis @ c @ psi_basis.T
-        Phi_pred_at_t0 = Phi_pred[:, 0]
-        loss_bc = lambda_bc * np.mean((Phi_pred_at_t0 - Phi_boundary) ** 2)
-
-        grad_t2 = np.zeros_like(Phi_pred)
-        if n_windows > 2:
-            grad_t2[1:-1, :] = (
-                Phi_pred[2:, :] - 2 * Phi_pred[1:-1, :] + Phi_pred[:-2, :]
-            )
-        loss_harm = lambda_harm * np.mean(grad_t2 ** 2)
-
-        loss_total = loss_bc + loss_harm
-        return float(loss_total)
-
-    c_init = np.zeros(n_basis * n_time_basis)
-    try:
-        result = minimize(
-            objective, c_init,
-            method="L-BFGS-B",
-            options={"maxiter": 200, "ftol": 1e-10},
-        )
-        return result.x.reshape(n_basis, n_time_basis)
-    except Exception as exc:
-        logger.warning("Dirichlet solver failed: %s", exc)
-        return c_init.reshape(n_basis, n_time_basis)
-
-
-def compute_T_predicted(
-    c_coeffs: np.ndarray,
-    V_basis: np.ndarray,
-    psi_basis: np.ndarray,
-    theta_hat: np.ndarray,
-    eigenvalues: np.ndarray,
-    sigma: float,
-) -> np.ndarray:
-    """Compute predicted transmission operator via eigenfunction gradients.
-
-    Uses the kernel-trick gradient (Critical Issue 3 fix).
-
-    Returns T_pred of shape [n_windows, d_U].
-    """
-    n_windows = theta_hat.shape[0]
-    n_basis = c_coeffs.shape[0]
-    n_time_basis = c_coeffs.shape[1]
-    d_U = theta_hat.shape[1]
-
-    T_pred = np.zeros((n_windows, d_U))
-
-    for wi in range(n_windows):
-        dV = eigenfunction_gradient(
-            theta_hat[wi], theta_hat, V_basis, eigenvalues, sigma,
-        )
-        t_coeff = psi_basis[wi, :]
-        weighted_c = c_coeffs @ t_coeff
-        T_pred[wi] = dV.T @ weighted_c
->>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 
     return T_pred
 
@@ -343,12 +268,65 @@ def compute_T_predicted(
 def approximate_ricci_tensor(
     g_metric: np.ndarray,
     theta_hat: np.ndarray,
+    g_metric_full: np.ndarray | None = None,
 ) -> np.ndarray:
-    """Approximate Ricci tensor via finite differences of g_ij."""
-    n_windows = g_metric.shape[0]
-    k = g_metric.shape[1]
-    logger.info("  [Bypass] Returning identity Ricci to avoid OOM")
-    return np.zeros((n_windows, k, k))
+    """Approximate Ricci tensor via scalar curvature from full Fisher-Rao metric.
+
+    The Nyström-reduced metric g_metric is the identity by construction, so its
+    curvature is zero.  Instead we derive the scalar Ricci curvature from the
+    FULL Fisher-Rao metric g_metric_full — which has genuine per-window variation
+    — and broadcast it into the reduced k×k tensor as R_ij(t) = R_s(t) · δ_ij.
+
+    Scalar curvature:  R_s(t) ≈ -½ · d²logdet(g_full(t)) / dt²
+
+    This is exact for conformally-flat metrics and a first-order approximation
+    in the general case (aligned with §3.1 of the Mathematical Foundation).
+    """
+    n_windows, k, _ = g_metric.shape
+
+    # Use full metric if available; fall back to reduced (will give zeros)
+    g_src = g_metric_full if g_metric_full is not None else g_metric
+    dim_src = g_src.shape[1]
+
+    # Compute log det per window using a stable leading sub-block to avoid OOM
+    sub_dim = min(dim_src, 64)
+    log_det = np.zeros(n_windows)
+    reg = 1e-4 * np.eye(sub_dim)
+    for t in range(n_windows):
+        g_t = g_src[t, :sub_dim, :sub_dim] + reg
+        # Replace extreme values before slogdet
+        g_t = np.clip(g_t, -1e15, 1e15)
+        sign, ld = np.linalg.slogdet(g_t)
+        log_det[t] = float(ld) if (sign > 0 and np.isfinite(ld)) else 0.0
+
+    # Smooth log_det with a 3-window moving average before differencing
+    from scipy.ndimage import uniform_filter1d
+    log_det_sm = uniform_filter1d(log_det, size=5, mode="nearest")
+
+    # Second derivative via central differences (multi-scale for robustness)
+    d2_log_det = np.zeros(n_windows)
+    for t in range(1, n_windows - 1):
+        d2_log_det[t] = log_det_sm[t + 1] - 2 * log_det_sm[t] + log_det_sm[t - 1]
+    d2_log_det[0] = d2_log_det[1]
+    d2_log_det[-1] = d2_log_det[-2]
+
+    # Robust normalisation by 95th percentile of |d2| — preserves signal in ALL
+    # windows with meaningful curvature, not just the single maximum outlier.
+    # StandardScaler on aux features handles absolute scale at model fit time.
+    d2_95 = np.percentile(np.abs(d2_log_det), 95)
+    if d2_95 > 1e-12:
+        d2_log_det = d2_log_det / d2_95
+    d2_log_det = np.clip(d2_log_det, -5.0, 5.0)   # prevent extreme outliers
+
+    # R_ij(t) = -½ · R_s(t) · δ_ij  (scalar curvature broadcast to identity)
+    Ric = np.zeros((n_windows, k, k))
+    for t in range(n_windows):
+        Ric[t] = -0.5 * d2_log_det[t] * np.eye(k)
+
+    logger.info("Ricci tensor: min=%.4e max=%.4e nonzero=%d/%d",
+                float(Ric.min()), float(Ric.max()),
+                int(np.any(Ric != 0, axis=(1, 2)).sum()), n_windows)
+    return Ric
 
 
 def run_harmonic_potential() -> None:
@@ -393,7 +371,6 @@ def run_harmonic_potential() -> None:
     for i in range(n_windows):
         for j in range(i, n_windows):
             diff = theta_hat[i] - theta_hat[j]
-<<<<<<< HEAD
             g_mid = (g_metric[i] + g_metric[j]) / 2.0
             g_mid = (g_mid + g_mid.T) / 2.0
             try:
@@ -402,9 +379,6 @@ def run_harmonic_potential() -> None:
                 dist_sq = float(np.dot(diff, diff))  # Fallback to Euclidean
             dist_sq = max(dist_sq, 0.0)
             K_rbf[i, j] = np.exp(-dist_sq / (2.0 * sigma ** 2))
-=======
-            K_rbf[i, j] = np.exp(-np.dot(diff, diff) / (2.0 * sigma ** 2))
->>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
             K_rbf[j, i] = K_rbf[i, j]
 
     K_rbf = ensure_positive_definite(K_rbf, name="K_rbf_spatial")
@@ -415,58 +389,41 @@ def run_harmonic_potential() -> None:
     eigenvalues = eigvals[idx_top]
     log_shape(V_basis, "V_basis")
 
-<<<<<<< HEAD
     with open(Path(config.OUTPUTS_DIR) / "phase_C" / "harmonic_families.json") as fh:
         harm_fam = json.load(fh)
     harmonics_hz = harm_fam["harmonics_hz"]
 
     all_c_coeffs = np.zeros((q_fin, n_basis, n_windows))
-=======
-    n_time_basis = min(10, n_windows)
-    t_norm = np.linspace(0, np.pi, n_windows)
-    psi_basis = np.zeros((n_windows, n_time_basis))
-    for l in range(n_time_basis):
-        psi_basis[:, l] = np.cos(l * t_norm)
-
-    all_c_coeffs = np.zeros((q_fin, n_basis, n_time_basis))
->>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 
     for k in range(q_fin):
         T_k_avg = np.zeros((n_windows, k_param))
         for wi in range(min(n_windows, T_hat_empirical.shape[0])):
-<<<<<<< HEAD
             # Average across frequency to get spatial vector
-=======
->>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
-            T_k_avg[wi, :min(k_param, T_hat_empirical.shape[3])] = np.real(
-                np.mean(T_hat_empirical[wi, :, k, :], axis=0)[
+            T_k_avg[wi, :min(k_param, T_hat_empirical.shape[3])] = np.mean(
+                np.abs(T_hat_empirical[wi, :, k, :]), axis=0)[
                     :min(k_param, T_hat_empirical.shape[3])
                 ]
-            )
+
+        # Normalise to unit std — T_hat_empirical can have std ~1e8 due to
+        # spectral magnitudes, which makes the curl-free GPR numerically unstable.
+        T_std = np.std(T_k_avg)
+        if T_std > 1e-10:
+            T_k_avg = T_k_avg / T_std
 
         g_tilde = project_to_curlfree(T_k_avg, theta_hat)
         theta_ref = theta_hat[0]
         Phi_boundary = integrate_path_boundary(g_tilde, theta_hat, theta_ref)
-<<<<<<< HEAD
         c_coeffs = solve_wave_cauchy(
             Phi_boundary, V_basis, eigenvalues, sigma, dt=0.1
         )
         all_c_coeffs[k] = c_coeffs
         logger.info("  Output %d/%d: Cauchy wave equation solved.", k + 1, q_fin)
-=======
-        c_coeffs = solve_harmonic_dirichlet(
-            g_tilde, Phi_boundary, V_basis, psi_basis,
-        )
-        all_c_coeffs[k] = c_coeffs
-        logger.info("  Output %d/%d: Dirichlet solved.", k + 1, q_fin)
->>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 
     save_npz(
         str(out_dir / "Phi_coefficients.npz"),
         c_coeffs=all_c_coeffs,
         V_basis=V_basis,
         eigenvalues=eigenvalues,
-<<<<<<< HEAD
         sigma=np.array([sigma]),
     )
 
@@ -476,22 +433,11 @@ def run_harmonic_potential() -> None:
             all_c_coeffs[k], V_basis, theta_hat, eigenvalues, sigma, harmonics_hz
         )
         T_pred_full[:, :, k, :min(k_param, T_k_freq.shape[2])] = T_k_freq[:, :, :k_param]
-=======
-        psi_basis=psi_basis,
-        sigma=np.array([sigma]),
-    )
-
-    T_pred_full = np.zeros((n_windows, q_fin, k_param))
-    for k in range(q_fin):
-        T_pred_full[:, k, :] = compute_T_predicted(
-            all_c_coeffs[k], V_basis, psi_basis,
-            theta_hat, eigenvalues, sigma,
-        )
->>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 
     save_npz(str(out_dir / "T_pred.npz"), T_pred=T_pred_full)
 
-    Ric = approximate_ricci_tensor(g_metric, theta_hat)
+    g_metric_full = g_data.get("g_metric_full", None)
+    Ric = approximate_ricci_tensor(g_metric, theta_hat, g_metric_full=g_metric_full)
     save_npz(str(out_dir / "ricci_tensor.npz"), Ric=Ric)
 
     max_ric = float(np.max(np.abs(Ric)))
@@ -501,20 +447,12 @@ def run_harmonic_potential() -> None:
             "Wave equation holds without damping.", max_ric,
         )
 
-<<<<<<< HEAD
     n_time_basis = all_c_coeffs.shape[2]  # derived from c_coeffs shape [q_fin, n_basis, n_windows]
-=======
-    import json
->>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
     metrics = {
         "n_windows": n_windows,
         "n_basis": n_basis,
         "n_time_basis": n_time_basis,
-<<<<<<< HEAD
         "sigma": float(sigma),
-=======
-        "sigma": sigma,
->>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
         "max_ricci": max_ric,
     }
     with open(out_dir / "hrpf_metrics.json", "w") as fh:

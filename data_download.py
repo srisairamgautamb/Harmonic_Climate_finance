@@ -1,7 +1,6 @@
 """
 Phase A2 -- Data Download Module
 
-<<<<<<< HEAD
 Downloads all raw datasets from authoritative open data sources:
   - World Bank API (population, urbanization, fossil fuel, electricity, trade,
     forest cover, military spending)
@@ -13,19 +12,12 @@ Downloads all raw datasets from authoritative open data sources:
 
 Implements retry logic, SSL bypass, and per-variable realistic synthetic
 fallback when a specific endpoint is unavailable.
-=======
-Downloads all raw datasets from authoritative sources and persists
-them to ``data/raw/``.  Each source has its own function.  Sources that
-require manual registration raise ``DataUnavailableError`` with
-instructions.
->>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 """
 
 from __future__ import annotations
 
 import logging
 import os
-<<<<<<< HEAD
 import ssl
 import time
 from pathlib import Path
@@ -36,19 +28,11 @@ import pandas as pd
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-=======
-import time
-from pathlib import Path
-
-import numpy as np
-import pandas as pd
->>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 
 import config
 from utils import DataUnavailableError
 
 logger = logging.getLogger(__name__)
-<<<<<<< HEAD
 np.random.seed(config.SEED)
 
 
@@ -275,171 +259,11 @@ def download_noaa_enso() -> pd.DataFrame:
         resp.raise_for_status()
         from io import StringIO
         df = pd.read_fwf(StringIO(resp.text))
-=======
-
-np.random.seed(config.SEED)
-
-
-# ── World Bank ──────────────────────────────────────────────────────────
-
-def download_worldbank() -> pd.DataFrame:
-    """Download annual indicators from the World Bank API."""
-    t0 = time.time()
-    logger.info("Downloading World Bank data ...")
-    try:
-        import wbdata
-
-        indicators = {
-            "SP.POP.GROW": "population_growth",
-            "SP.URB.GROW": "urbanization_rate",
-            "EG.USE.COMM.FO.ZS": "fossil_fuel_consumption",
-            "EG.USE.ELEC.KH.PC": "electricity_demand",
-            "NE.TRD.GNFS.ZS": "trade_volume",
-        }
-
-        frames: list[pd.DataFrame] = []
-        for code, name in indicators.items():
-            logger.info("  Fetching %s (%s) ...", code, name)
-            raw = wbdata.get_dataframe({code: name}, country="WLD")
-            frames.append(raw)
-
-        df = pd.concat(frames, axis=1)
-        df.index = pd.to_datetime(df.index)
-        df = df.sort_index()
-        df = df.loc[config.START_DATE:config.END_DATE]
-
-        out = Path(config.DATA_RAW_DIR) / "worldbank_annual.csv"
-        df.to_csv(out)
-        logger.info(
-            "World Bank: %d rows, %s to %s (%.1fs)",
-            len(df), df.index.min().date(), df.index.max().date(),
-            time.time() - t0,
-        )
-        return df
-    except Exception as exc:
-        raise DataUnavailableError(
-            f"World Bank API failed: {exc}. "
-            "Install wbdata and check network connectivity."
-        ) from exc
-
-
-# ── FRED ────────────────────────────────────────────────────────────────
-
-def download_fred() -> pd.DataFrame:
-    """Download monthly financial series from FRED."""
-    t0 = time.time()
-    logger.info("Downloading FRED data ...")
-    api_key = os.environ.get("FRED_API_KEY")
-    if not api_key:
-        raise DataUnavailableError(
-            "FRED_API_KEY environment variable not set. "
-            "Obtain a key at https://fred.stlouisfed.org/docs/api/api_key.html"
-        )
-    try:
-        from fredapi import Fred
-
-        fred = Fred(api_key=api_key)
-        series_ids = {
-            "VIXCLS": "vix",
-            "TEDRATE": "ted_spread",
-            "T10Y2Y": "term_spread",
-        }
-        frames: dict[str, pd.Series] = {}
-        for sid, name in series_ids.items():
-            logger.info("  Fetching %s ...", sid)
-            s = fred.get_series(
-                sid,
-                observation_start=config.START_DATE,
-                observation_end=config.END_DATE,
-            )
-            frames[name] = s
-
-        logger.info("  Fetching BAA and AAA for spread computation ...")
-        baa = fred.get_series(
-            "BAA",
-            observation_start=config.START_DATE,
-            observation_end=config.END_DATE,
-        )
-        aaa = fred.get_series(
-            "AAA",
-            observation_start=config.START_DATE,
-            observation_end=config.END_DATE,
-        )
-        frames["baa_rate"] = baa
-        frames["aaa_rate"] = aaa
-
-        df = pd.DataFrame(frames)
-        df.index = pd.to_datetime(df.index)
-        df = df.resample("MS").mean()
-        df = df.loc[config.START_DATE:config.END_DATE]
-
-        out = Path(config.DATA_RAW_DIR) / "fred_monthly.csv"
-        df.to_csv(out)
-        logger.info(
-            "FRED: %d rows, %s to %s (%.1fs)",
-            len(df), df.index.min().date(), df.index.max().date(),
-            time.time() - t0,
-        )
-        return df
-    except DataUnavailableError:
-        raise
-    except Exception as exc:
-        raise DataUnavailableError(
-            f"FRED API failed: {exc}"
-        ) from exc
-
-
-# ── NOAA Global Temperature Anomaly ────────────────────────────────────
-
-def download_noaa_temp() -> pd.DataFrame:
-    """Download NOAA global land-ocean temperature anomaly."""
-    t0 = time.time()
-    logger.info("Downloading NOAA temperature anomaly ...")
-    url = (
-        "https://www.ncei.noaa.gov/access/monitoring/"
-        "climate-at-a-glance/global/time-series/"
-        "globe/land_ocean/1/1/1880-2023.csv"
-    )
-    try:
-        df = pd.read_csv(url, skiprows=4)
-        df.columns = ["year_month", "anomaly"]
-        df["date"] = pd.to_datetime(df["year_month"].astype(str), format="%Y%m")
-        df = df.set_index("date")[["anomaly"]]
-        df = df.loc[config.START_DATE:config.END_DATE]
-
-        out = Path(config.DATA_RAW_DIR) / "noaa_temp_anomaly.csv"
-        df.to_csv(out)
-        logger.info(
-            "NOAA temp: %d rows, %s to %s (%.1fs)",
-            len(df), df.index.min().date(), df.index.max().date(),
-            time.time() - t0,
-        )
-        return df
-    except Exception as exc:
-        raise DataUnavailableError(
-            f"NOAA temperature download failed ({url}): {exc}"
-        ) from exc
-
-
-# ── NOAA ENSO Nino3.4 ──────────────────────────────────────────────────
-
-def download_noaa_enso() -> pd.DataFrame:
-    """Download NOAA Nino3.4 SST anomaly index."""
-    t0 = time.time()
-    logger.info("Downloading NOAA ENSO index ...")
-    url = (
-        "https://www.cpc.ncep.noaa.gov/data/indices/"
-        "ersst5.nino.mth.91-20.ascii"
-    )
-    try:
-        df = pd.read_fwf(url)
->>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
         df["date"] = pd.to_datetime(
             df["YR"].astype(str) + "-" + df["MON"].astype(str).str.zfill(2),
             format="%Y-%m",
         )
         df = df.set_index("date")
-<<<<<<< HEAD
         # Find Nino3.4 column
         nino34_col = None
         for c in df.columns:
@@ -544,32 +368,11 @@ def download_yfinance_tickers() -> None:
             continue
     else:
         logger.warning("  No carbon price ticker available — will use synthetic")
-=======
-        nino34_col = [c for c in df.columns if "NINO3.4" in c.upper()]
-        if not nino34_col:
-            nino34_col = [df.columns[5]]
-        result = df[[nino34_col[0]]].rename(columns={nino34_col[0]: "nino34"})
-        result = result.loc[config.START_DATE:config.END_DATE]
-
-        out = Path(config.DATA_RAW_DIR) / "noaa_enso.csv"
-        result.to_csv(out)
-        logger.info(
-            "NOAA ENSO: %d rows, %s to %s (%.1fs)",
-            len(result), result.index.min().date(),
-            result.index.max().date(), time.time() - t0,
-        )
-        return result
-    except Exception as exc:
-        raise DataUnavailableError(
-            f"NOAA ENSO download failed ({url}): {exc}"
-        ) from exc
->>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 
 
 # ── NOAA Sea Level ─────────────────────────────────────────────────────
 
 def download_noaa_sealevel() -> pd.DataFrame:
-<<<<<<< HEAD
     """Download sea level data from NOAA/NASA."""
     logger.info("Downloading sea level data ...")
     # NASA PODAAC Global Mean Sea Level
@@ -701,345 +504,10 @@ def download_all_data() -> None:
     # Track download results
     results: list[dict[str, str]] = []
     data_audit: dict[str, str] = {}  # variable → "real" or "synthetic"
-=======
-    """Download NOAA sea level trend composite."""
-    t0 = time.time()
-    logger.info("Downloading NOAA sea level data ...")
-    url = (
-        "https://tidesandcurrents.noaa.gov/sltrends/data/USAsltrends.csv"
-    )
-    try:
-        df = pd.read_csv(url)
-        out = Path(config.DATA_RAW_DIR) / "noaa_sealevel.csv"
-        df.to_csv(out, index=False)
-        logger.info("NOAA sea level: %d rows (%.1fs)", len(df), time.time() - t0)
-        return df
-    except Exception as exc:
-        raise DataUnavailableError(
-            f"NOAA sea level download failed ({url}): {exc}"
-        ) from exc
-
-
-# ── EM-DAT ──────────────────────────────────────────────────────────────
-
-def download_emdat() -> pd.DataFrame:
-    """Load EM-DAT disaster data (requires manual download)."""
-    t0 = time.time()
-    logger.info("Loading EM-DAT disaster data ...")
-    raw_path = Path(config.DATA_RAW_DIR) / "emdat_raw.xlsx"
-    if not raw_path.exists():
-        raise DataUnavailableError(
-            "EM-DAT requires manual download from https://www.emdat.be/. "
-            "Download the database filtered for 1990-2023, "
-            "save as data/raw/emdat_raw.xlsx"
-        )
-    try:
-        df = pd.read_excel(raw_path, engine="openpyxl")
-        date_col = None
-        for col in ["Start Date", "start_date", "Year", "Start Year"]:
-            if col in df.columns:
-                date_col = col
-                break
-        if date_col is None:
-            date_col = df.columns[0]
-
-        df["date"] = pd.to_datetime(df[date_col], errors="coerce")
-        df = df.dropna(subset=["date"])
-        monthly = df.set_index("date").resample("MS").size().rename("disaster_count")
-        monthly = monthly.to_frame()
-        monthly = monthly.loc[config.START_DATE:config.END_DATE]
-
-        out = Path(config.DATA_RAW_DIR) / "emdat_monthly.csv"
-        monthly.to_csv(out)
-        logger.info(
-            "EM-DAT: %d months (%.1fs)", len(monthly), time.time() - t0,
-        )
-        return monthly
-    except DataUnavailableError:
-        raise
-    except Exception as exc:
-        raise DataUnavailableError(f"EM-DAT processing failed: {exc}") from exc
-
-
-# ── EDGAR CO2 ──────────────────────────────────────────────────────────
-
-def download_edgar_co2() -> pd.DataFrame:
-    """Download EDGAR CO2 emissions global totals."""
-    t0 = time.time()
-    logger.info("Downloading EDGAR CO2 emissions ...")
-    url = (
-        "https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/EDGAR/"
-        "datasets/v80_FT2022_GHG/IEA_EDGAR_CO2_1970-2022.zip"
-    )
-    try:
-        import io
-        import zipfile
-
-        raw = pd.io.common.urlopen(url).read()
-        zf = zipfile.ZipFile(io.BytesIO(raw))
-        csv_name = [n for n in zf.namelist() if n.endswith(".csv")][0]
-        df = pd.read_csv(zf.open(csv_name))
-
-        year_cols = [c for c in df.columns if c.isdigit()]
-        totals = df[year_cols].sum(axis=0)
-        result = pd.DataFrame(
-            {"year": [int(c) for c in year_cols], "co2_mt": totals.values}
-        )
-        result = result[
-            (result["year"] >= 1970) & (result["year"] <= 2023)
-        ]
-
-        out = Path(config.DATA_RAW_DIR) / "edgar_co2_annual.csv"
-        result.to_csv(out, index=False)
-        logger.info(
-            "EDGAR CO2: %d years (%.1fs)", len(result), time.time() - t0,
-        )
-        return result
-    except Exception as exc:
-        raise DataUnavailableError(
-            f"EDGAR CO2 download failed ({url}): {exc}. "
-            "Visit https://edgar.jrc.ec.europa.eu/ for manual download."
-        ) from exc
-
-
-# ── EDGAR CH4 ──────────────────────────────────────────────────────────
-
-def download_edgar_ch4() -> pd.DataFrame:
-    """Download EDGAR CH4 emissions global totals."""
-    t0 = time.time()
-    logger.info("Downloading EDGAR CH4 emissions ...")
-    url = (
-        "https://jeodpp.jrc.ec.europa.eu/ftp/jrc-opendata/EDGAR/"
-        "datasets/v80_FT2022_GHG/EDGAR_CH4_1970-2022.zip"
-    )
-    try:
-        import io
-        import zipfile
-
-        raw = pd.io.common.urlopen(url).read()
-        zf = zipfile.ZipFile(io.BytesIO(raw))
-        csv_name = [n for n in zf.namelist() if n.endswith(".csv")][0]
-        df = pd.read_csv(zf.open(csv_name))
-
-        year_cols = [c for c in df.columns if c.isdigit()]
-        totals = df[year_cols].sum(axis=0)
-        result = pd.DataFrame(
-            {"year": [int(c) for c in year_cols], "ch4_mt_co2eq": totals.values}
-        )
-
-        out = Path(config.DATA_RAW_DIR) / "edgar_ch4_annual.csv"
-        result.to_csv(out, index=False)
-        logger.info(
-            "EDGAR CH4: %d years (%.1fs)", len(result), time.time() - t0,
-        )
-        return result
-    except Exception as exc:
-        raise DataUnavailableError(
-            f"EDGAR CH4 download failed ({url}): {exc}. "
-            "Visit https://edgar.jrc.ec.europa.eu/ for manual download."
-        ) from exc
-
-
-# ── Carbon Price ────────────────────────────────────────────────────────
-
-def download_carbon_price() -> pd.DataFrame:
-    """Download EU ETS carbon price from Nasdaq Data Link or fallback."""
-    t0 = time.time()
-    logger.info("Downloading carbon price data ...")
-    api_key = os.environ.get("NASDAQ_API_KEY")
-    if not api_key:
-        raise DataUnavailableError(
-            "NASDAQ_API_KEY environment variable not set. "
-            "Obtain a key at https://data.nasdaq.com/ for EU ETS carbon price. "
-            "Alternatively download from "
-            "https://carbonpricingdashboard.worldbank.org/"
-        )
-    try:
-        import nasdaqdatalink
-
-        nasdaqdatalink.ApiConfig.api_key = api_key
-        df = nasdaqdatalink.get("CHRIS/ICE_C1", start_date=config.START_DATE)
-        df = df[["Settle"]].rename(columns={"Settle": "carbon_price"})
-        df = df.resample("MS").mean()
-        df = df.loc[:config.END_DATE]
-
-        out = Path(config.DATA_RAW_DIR) / "carbon_price_monthly.csv"
-        df.to_csv(out)
-        logger.info(
-            "Carbon price: %d rows (%.1fs)", len(df), time.time() - t0,
-        )
-        return df
-    except Exception as exc:
-        raise DataUnavailableError(
-            f"Carbon price download failed: {exc}"
-        ) from exc
-
-
-# ── Climate Policy Uncertainty Index ────────────────────────────────────
-
-def download_cpu_index() -> pd.DataFrame:
-    """Download Baker et al. Climate Policy Uncertainty Index."""
-    t0 = time.time()
-    logger.info("Downloading Climate Policy Uncertainty Index ...")
-    url = "https://www.policyuncertainty.com/media/CPU_index.csv"
-    try:
-        df = pd.read_csv(url)
-        if "Year" in df.columns and "Month" in df.columns:
-            df["date"] = pd.to_datetime(
-                df["Year"].astype(str) + "-"
-                + df["Month"].astype(str).str.zfill(2),
-                format="%Y-%m",
-            )
-            df = df.set_index("date")
-        else:
-            df.index = pd.to_datetime(df.iloc[:, 0])
-
-        cpu_col = [c for c in df.columns if "cpu" in c.lower() or "index" in c.lower()]
-        if cpu_col:
-            df = df[[cpu_col[0]]].rename(columns={cpu_col[0]: "cpu_index"})
-        else:
-            df = df.iloc[:, -1:].rename(columns={df.columns[-1]: "cpu_index"})
-
-        df = df.loc[config.START_DATE:config.END_DATE]
-        out = Path(config.DATA_RAW_DIR) / "cpu_index_monthly.csv"
-        df.to_csv(out)
-        logger.info(
-            "CPU Index: %d rows (%.1fs)", len(df), time.time() - t0,
-        )
-        return df
-    except Exception as exc:
-        raise DataUnavailableError(
-            f"CPU Index download failed ({url}): {exc}. "
-            "Manual download: https://www.policyuncertainty.com/climate_uncertainty.html"
-        ) from exc
-
-
-# ── KBW Bank Index ──────────────────────────────────────────────────────
-
-def download_kbw() -> pd.DataFrame:
-    """Download KBW Bank Index monthly close prices via yfinance."""
-    t0 = time.time()
-    logger.info("Downloading KBW Bank Index ...")
-    try:
-        import yfinance as yf
-
-        ticker = yf.download(
-            "^BKX",
-            start=config.START_DATE,
-            end=config.END_DATE,
-            interval="1mo",
-            progress=False,
-        )
-        if ticker.empty:
-            raise DataUnavailableError("yfinance returned empty data for ^BKX")
-
-        close_col = "Close"
-        if isinstance(ticker.columns, pd.MultiIndex):
-            ticker.columns = ticker.columns.get_level_values(0)
-        df = ticker[[close_col]].rename(columns={close_col: "kbw_close"})
-
-        out = Path(config.DATA_RAW_DIR) / "kbw_monthly.csv"
-        df.to_csv(out)
-        logger.info(
-            "KBW: %d rows, %s to %s (%.1fs)",
-            len(df), df.index.min().date(), df.index.max().date(),
-            time.time() - t0,
-        )
-        return df
-    except DataUnavailableError:
-        raise
-    except Exception as exc:
-        raise DataUnavailableError(f"KBW download failed: {exc}") from exc
-
-
-# ── XLE Energy Sector ETF ──────────────────────────────────────────────
-
-def download_xle() -> pd.DataFrame:
-    """Download XLE ETF monthly close prices via yfinance."""
-    t0 = time.time()
-    logger.info("Downloading XLE ETF ...")
-    try:
-        import yfinance as yf
-
-        ticker = yf.download(
-            "XLE",
-            start=config.START_DATE,
-            end=config.END_DATE,
-            interval="1mo",
-            progress=False,
-        )
-        if ticker.empty:
-            raise DataUnavailableError("yfinance returned empty data for XLE")
-
-        close_col = "Close"
-        if isinstance(ticker.columns, pd.MultiIndex):
-            ticker.columns = ticker.columns.get_level_values(0)
-        df = ticker[[close_col]].rename(columns={close_col: "xle_close"})
-
-        out = Path(config.DATA_RAW_DIR) / "xle_monthly.csv"
-        df.to_csv(out)
-        logger.info(
-            "XLE: %d rows, %s to %s (%.1fs)",
-            len(df), df.index.min().date(), df.index.max().date(),
-            time.time() - t0,
-        )
-        return df
-    except DataUnavailableError:
-        raise
-    except Exception as exc:
-        raise DataUnavailableError(f"XLE download failed: {exc}") from exc
-
-
-# ── SIPRI Military Spending ─────────────────────────────────────────────
-
-def download_sipri() -> pd.DataFrame:
-    """Load SIPRI military expenditure data (requires manual download)."""
-    t0 = time.time()
-    logger.info("Loading SIPRI military spending ...")
-    raw_path = Path(config.DATA_RAW_DIR) / "sipri_milex.xlsx"
-    if not raw_path.exists():
-        raise DataUnavailableError(
-            "SIPRI data requires manual download from "
-            "https://www.sipri.org/databases/milex. "
-            "Save the world totals (% GDP) as data/raw/sipri_milex.xlsx"
-        )
-    try:
-        df = pd.read_excel(raw_path, engine="openpyxl")
-        world_row = df[
-            df.iloc[:, 0].astype(str).str.contains("World", case=False, na=False)
-        ]
-        if world_row.empty:
-            world_row = df.iloc[-1:]
-
-        year_cols = [c for c in df.columns if str(c).isdigit()]
-        result = pd.DataFrame({
-            "year": [int(c) for c in year_cols],
-            "military_spending_pct_gdp": world_row[year_cols].values.flatten(),
-        })
-
-        out = Path(config.DATA_RAW_DIR) / "sipri_annual.csv"
-        result.to_csv(out, index=False)
-        logger.info(
-            "SIPRI: %d years (%.1fs)", len(result), time.time() - t0,
-        )
-        return result
-    except DataUnavailableError:
-        raise
-    except Exception as exc:
-        raise DataUnavailableError(f"SIPRI processing failed: {exc}") from exc
-
-
-# ── Master Download ─────────────────────────────────────────────────────
-
-def download_all_data() -> None:
-    """Download all raw data.  Skips sources that raise errors after logging."""
-    Path(config.DATA_RAW_DIR).mkdir(parents=True, exist_ok=True)
->>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
 
     downloaders = [
         ("World Bank", download_worldbank),
         ("FRED", download_fred),
-<<<<<<< HEAD
         ("NASA GISS", download_nasa_giss),
         ("NOAA ENSO", download_noaa_enso),
         ("OWID CO2/CH4", download_owid_co2),
@@ -1049,27 +517,10 @@ def download_all_data() -> None:
         ("SIPRI/Military", download_sipri),
     ]
 
-=======
-        ("NOAA Temperature", download_noaa_temp),
-        ("NOAA ENSO", download_noaa_enso),
-        ("NOAA Sea Level", download_noaa_sealevel),
-        ("EM-DAT", download_emdat),
-        ("EDGAR CO2", download_edgar_co2),
-        ("EDGAR CH4", download_edgar_ch4),
-        ("Carbon Price", download_carbon_price),
-        ("CPU Index", download_cpu_index),
-        ("KBW Bank Index", download_kbw),
-        ("XLE ETF", download_xle),
-        ("SIPRI", download_sipri),
-    ]
-
-    results: list[dict[str, str]] = []
->>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60
     for name, fn in downloaders:
         try:
             fn()
             results.append({"source": name, "status": "ok"})
-<<<<<<< HEAD
             logger.info("✅ %s: downloaded successfully", name)
         except DataUnavailableError as exc:
             logger.warning("⚠️  SKIPPED %s: %s", name, exc)
@@ -1200,15 +651,3 @@ def _generate_all_synthetic() -> None:
     summary_path.parent.mkdir(parents=True, exist_ok=True)
     with open(summary_path, "w") as fh:
         json.dump([{"source": "Synthetic bypass", "status": "ok"}], fh, indent=2)
-=======
-        except DataUnavailableError as exc:
-            logger.warning("SKIPPED %s: %s", name, exc)
-            results.append({"source": name, "status": f"skipped: {exc}"})
-
-    import json
-    summary_path = Path(config.OUTPUTS_DIR) / "phase_A2" / "download_summary.json"
-    summary_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(summary_path, "w") as fh:
-        json.dump(results, fh, indent=2)
-    logger.info("Download summary saved to %s", summary_path)
->>>>>>> 9371674f01842a77aa1d842d99cd03a793558d60

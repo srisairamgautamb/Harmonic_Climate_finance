@@ -1,0 +1,26 @@
+{
+  "Classical RBF": {
+    "eff_rank": 29.3,
+    "spec_entropy": 3.379,
+    "discrimination": 0.1693,
+    "kta": 0.1674
+  },
+  "Fisher-Rao (QG)": {
+    "eff_rank": 5.6,
+    "spec_entropy": 1.718,
+    "discrimination": 0.3093,
+    "kta": 0.0532
+  },
+  "Wilson-Loop (Quantum)": {
+    "eff_rank": 98.3,
+    "spec_entropy": 4.588,
+    "discrimination": 0.0868,
+    "kta": 0.1287
+  },
+  "HQG Combined": {
+    "eff_rank": 22.9,
+    "spec_entropy": 3.13,
+    "discrimination": 0.1726,
+    "kta": 0.0836
+  }
+}
