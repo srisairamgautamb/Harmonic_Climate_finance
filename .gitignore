@@ -33,3 +33,6 @@ env/
 logs/main.log
 outputs/phase_B/spectral_features.npz
 outputs/phase_D/fisher_rao_metric.npz
+
+# Claude local settings
+.claude/
