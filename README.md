@@ -1,6 +1,8 @@
 # Spectral Climate-Financial Risk Transmission: A Harmonic Quantum Machine Learning Framework
 
-Sri Sairam Gautam B., Divyendu Kashyap
+Sri Sairam Gautam B., Divyendu Kashyap 
+
+
 School of Engineering, Jawaharlal Nehru University
 
 This repository contains the implementation behind the paper of the same title. It models the transmission of climate and socioeconomic shocks into financial risk as a harmonic process on a statistical manifold, and uses the resulting geometric and spectral structure to build a kernel for forecasting financial risk indicators.
