@@ -1,118 +1,151 @@
-# Harmonic Climate Finance: Spectral Climate-Financial Risk Transmission
+# Spectral Climate-Financial Risk Transmission: A Harmonic Quantum Machine Learning Framework
 
-<div align="center">
+Sri Sairam Gautam B., Divyendu Kashyap
+School of Engineering, Jawaharlal Nehru University
 
-[![Python 3.14](https://img.shields.io/badge/python-3.14-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Status: Operational](https://img.shields.io/badge/Status-Operational-brightgreen.svg)]()
-[![Pipeline: 10 Phases](https://img.shields.io/badge/Pipeline-10%20Phases-orange.svg)]()
+This repository contains the implementation behind the paper of the same title. It models the transmission of climate and socioeconomic shocks into financial risk as a harmonic process on a statistical manifold, and uses the resulting geometric and spectral structure to build a kernel for forecasting financial risk indicators.
 
-</div>
+## Overview
 
----
+Conventional time-domain econometric models treat climate-financial linkages as locally linear and stationary. The framework here combines four components:
 
-## 📖 Executive Summary
+1. Spectral analysis of rolling-window multivariate dynamics, including frequency-domain Granger causality and phase lag.
+2. Information geometry: local VAR dynamics are parameterized by Whittle likelihood and embedded on a manifold with the Fisher-Rao metric.
+3. Harmonic analysis: a graph Laplacian over windows, weighted by Fisher-Rao distance, yields harmonic basis functions and a potential field obtained from a discrete Dirichlet boundary value problem.
+4. The Harmonic Quantum Geometry (HQG) kernel, which combines a harmonic kernel, a geodesic kernel on Fisher-Rao distances, and a quantum state-fidelity kernel from a 6-qubit angle-encoded circuit, and is used in kernel ridge regression (HQG-KRR) and SVM classification (HQG-SVM).
 
-The **Harmonic Climate Finance** project investigates a fundamental macroeconomic and financial question: **How do climate shocks (rising temperatures, extreme weather, droughts) transmit through the global economy and eventually manifest as financial market risk?**
+The quantum component is simulated classically with a statevector simulator. It is used as an expressive feature map, not as a claim of computational quantum advantage.
 
-This project models climate-financial risk transmission as a wave propagating across a curved economic manifold. By unifying **Spectral Analysis**, **Riemannian Geometry**, **Quantum-Inspired Computing**, and **Harmonic Analysis**, we present an operational 10-phase computational pipeline that ingests real-world socioeconomic, climate, and financial data to model, measure, and forecast systemic risks.
+## Formulation
 
----
+The system is a multivariate process $Z_t = (D_t, C_t, R^{cl}_t, R^{fin}_t)$ of socioeconomic drivers, climate indicators, climate risk proxies and financial risk indicators, assumed to follow the causal ordering $D \to C \to R^{cl} \to R^{fin}$. Within each 60-month window the dynamics are approximated by a VAR process, and the spectral density matrix $S_Z(\omega)$ is estimated from it.
 
-## 🧠 Core Mathematical Architecture
+Spectral causality from $X$ to $Y$ at frequency $\omega$:
 
-The pipeline is built on a novel, unified mathematical framework:
+$$\mathcal{F}_{X \to Y}(\omega) = \log \frac{\det S_{YY}(\omega)}{\det S_{YY|X}(\omega)}$$
 
-1. **Spectral Analysis (Frequency Domain):** We decompose 34 years of time-series data into continuous frequency bands to analyze lead-lag relationships and identifying high-frequency rapid transmission of climate shocks.
-2. **Fisher-Rao Information Geometry:** We map the economy onto a curved statistical manifold. By computing the Fisher-Rao metric from local Vector Autoregressive (VAR) parameters, we define rigorous "distances" between different economic risk regimes.
-3. **Harmonic Wave Equations:** We model risk transmission like sound travelling over a drum, building a Graph Laplacian on the economic manifold and solving Dirichlet boundary value problems to extract spatial and frequency "harmonics."
-4. **Harmonic Quantum Geometry (HQG) Kernel:** We construct a hybrid kernel (`K_HQG`) that combines geometric distances (via Fisher-Rao), spatial harmonics, and quantum correlations (via state fidelity from a 6-qubit angle-encoded quantum circuit), using it to power Quantum Kernel Ridge Regression (QKR) for forecasting.
+Window graph weights from Fisher-Rao distance, and the Laplacian whose harmonic condition defines the risk potential $\Phi$:
 
----
+$$W_{ij} = \exp\left(-\frac{d^2(\theta_i, \theta_j)}{\sigma^2}\right), \qquad L = D - W, \qquad L\Phi = 0$$
 
-## 📊 Data Architecture
+HQG kernel and forecaster:
 
-The pipeline operates on 34 years of monthly data (1990–2023) across 25 distinct variables, organized into a multi-block causal chain:
+$$K_{HQG} = \lambda_h K_{harm} + \lambda_g K_{geo} + \lambda_q K_{quant}, \qquad \hat{y} = K_{HQG}(K_{HQG} + \lambda I)^{-1} y$$
 
-- 🌍 **Socioeconomic Drivers (9 variables):** e.g., Population Growth, Fossil Fuel Consumption, CO₂ Emissions, Trade Volume.
-- 🌡️ **Physical Climate Indicators (6 variables):** e.g., Global Temperature Anomaly, ENSO Index, Sea Level Rise, Drought Index.
-- 📉 **Climate Risk Proxies (4 variables):** e.g., Carbon Price Volatility, Climate Policy Uncertainty.
-- 🏦 **Financial Market Risks (6 variables):** e.g., VIX (Volatility Index), Baa-Aaa Credit Spread, Bank Equity Volatility.
+The weights are non-negative and sum to one. They are selected by grid search on kernel-target alignment over training windows, and the adaptive variant re-optimizes them every 5 walk-forward steps on an expanding window. $K_{geo}$ is a Matern kernel on Fisher-Rao geodesic distances, and $K_{quant}(x, x') = |\langle \psi(x) | \psi(x') \rangle|^2$.
 
-*Data is sourced programmatically via FRED (Federal Reserve), World Bank APIs, and NOAA/NASA datasets.*
+## Data
 
----
+Monthly observations from 1990 to 2023 for 25 variables in four blocks:
 
-## 🚀 The 10-Phase Pipeline
+| Block | Variables | Examples |
+|:---|:---:|:---|
+| Socioeconomic drivers | 9 | population growth, fossil fuel consumption, CO2 emissions, trade volume |
+| Physical climate indicators | 6 | temperature anomaly, ENSO index, sea level, drought index |
+| Climate risk proxies | 4 | carbon price volatility, climate policy uncertainty |
+| Financial risk indicators | 6 | VIX, Baa-Aaa credit spread, bank equity volatility |
 
-The system is fully automated through `main.py`, executing 10 distinct sequential phases:
+Sources are FRED, World Bank APIs and NASA/NOAA climate datasets, retrieved programmatically. Preprocessing resamples to monthly frequency, applies linear interpolation and forward fill, log-differences and standardizes for approximate stationarity, and scales to zero mean and unit variance. Rolling 60-month windows with a one-month step give 348 windows.
 
-| Phase | Module | Description |
-|:---:|:---|:---|
-| **A** | `data_download.py` & `preprocessing.py` | API downloads, chronological alignment, imputation, and stationarity transformations. |
-| **B** | `spectral_estimation.py` | Rolling window (60-mo) cross-spectral density matrix computation. |
-| **C** | `spectral_causality.py` | VAR(3) fitting and spectral Granger causality tests across all variable blocks. |
-| **D** | `var_spectral_param.py` | Whittle MLE parameterization and empirical Fisher-Rao Riemannian metric tensor computation. |
-| **E** | `harmonic_potential.py` | Graph Laplacian eigen-decomposition, Dirichlet BVP wave solving, and Ricci curvature analysis. |
-| **F** | `kernel_construction.py` | Synthesis of Harmonic (`K_Harm`) and Quantum-Geometric (`K_QG`) matrices into the `K_HQG` kernel. |
-| **G** | `quantum_embedding.py` | 6-qubit quantum circuit angle-encoding and simulated fidelity kernel generation. |
-| **H** | `classical_baselines.py` | Traditional benchmarking against LSR, RBF-SVM, Random Forests, LSTM, and empirical VAR models. |
-| **I** | `hqg_models.py` | Training and optimal hyperparameter grid-search of the HQG-SVM classifiers and HQG-KRR forecasters. |
-| **J** | `visualization.py` | Automated generation of 14+ publication-quality PDF figures. |
+## Pipeline
 
----
+`main.py` runs the stages in order. Phase codes are accepted by `--phases` and `--skip`.
 
-## 💻 Installation & Usage
+| Stage | Code | Module | Function |
+|:---|:---:|:---|:---|
+| 1. Data acquisition and preprocessing | A2, A3, A4 | `data_download.py`, `data_alignment.py`, `preprocessing.py` | Download, chronological alignment, imputation, stationarity transforms |
+| 2. Spectral estimation | B1 | `spectral_estimation.py` | Rolling-window cross-spectral density matrices |
+| 3. Spectral causality | C1 | `spectral_causality.py` | VAR fitting, spectral Granger causality, phase lag |
+| 4. Fisher-Rao geometry | D1 | `var_spectral_param.py` | Whittle parameterization, Fisher-Rao metric |
+| 5. Harmonic potential | E1 | `harmonic_potential.py` | Graph Laplacian eigendecomposition, Dirichlet problem, curvature proxy |
+| 6. Kernel construction | F1 | `kernel_construction.py` | Harmonic and geodesic kernels, HQG combination |
+| 7. Quantum embedding | G1 | `quantum_embedding.py` | 6-qubit angle encoding, fidelity kernel |
+| 8. Classical baselines | H1 | `classical_baselines.py` | LSR, RBF-SVM, Random Forest, LSTM, VAR |
+| Topological analysis | T1 | `topological_analysis.py` | Vietoris-Rips persistence, persistence-diagram kernel, gap-statistic regime clustering |
+| 9. HQG models | I1 | `hqg_models.py` | HQG-KRR, adaptive HQG-KRR, HQG-SVM, statistical tests |
+| 10. Visualization | J1 | `visualization.py` | Figure generation (14 PDFs) |
 
-### 1. Prerequisites
-Ensure you have **Python 3.14** installed. Memory requirements vary: standard runs require ~16GB RAM. Computing the complete unbypassed Fisher-Rao metric tensor object in Phase D may require 200GB+ RAM. 
+## Results
 
-### 2. Setup
+Forecasting target is next-period standardized VIX. The split is chronological with 296 training and 52 test observations. Values are from `outputs/phase_H/model_comparison.csv` and `outputs/phase_I/`.
+
+| Model | RMSE | R^2 |
+|:---|---:|---:|
+| LSR | 1.018 | 0.191 |
+| RBF-SVM | 1.039 | 0.158 |
+| LSTM | 1.033 | 0.167 |
+| Random Forest | 1.168 | -0.065 |
+| VAR | 1.179 | -0.080 |
+| HQG-KRR | 0.988 | 0.237 |
+| HQG-KRR, adaptive weights | 0.963 | 0.276 |
+
+- HQG-KRR has the lowest RMSE and highest R^2 of the evaluated models; the adaptive variant improves both further.
+- Against LSR, the strongest baseline, the Diebold-Mariano test gives statistic -0.21 (p = 0.834). The Clark-West test for nested models gives 1.69 (one-sided p = 0.046). With 52 test observations the Diebold-Mariano test has limited power.
+- Split conformal prediction intervals at 90% nominal level reach 91.9% empirical coverage on a calibration set of 74 windows, with half-width 1.45 in standardized units.
+- Stress-regime classification with HQG-SVM gives F1 0.200, precision 0.167, recall 0.250 and AUC 0.531 on the test set. The LSR and RBF-SVM classifiers give F1 0.0 under the same protocol.
+
+Spectral Granger causality between blocks, from `outputs/phase_C/causality_summary.csv`:
+
+| Direction | Total causality | Peak period (months) |
+|:---|---:|:---|
+| $D \to R^{fin}$ | 3.91 | 7.6 |
+| $D \to C$ | 3.11 | 7.6 |
+| $C \to R^{fin}$ | 1.81 | 7.2 |
+| $D \to R^{cl}$ | 1.78 | zero frequency |
+| $R^{cl} \to R^{fin}$ | 1.37 | zero frequency |
+| $C \to R^{cl}$ | 1.13 | 7.2 |
+
+Socioeconomic drivers carry the largest total causal influence on financial risk indicators among the six block pairs, consistent with the layered ordering assumed in the framework.
+
+## Scope and limitations
+
+- Windows are treated as locally stationary, which may not capture structural breaks or long-term nonstationarity.
+- The test set is short (52 months), and performance differences relative to LSR are modest. Results have been reported for a single chronological split.
+- The full Fisher-Rao metric tensor is memory-intensive. The pipeline works with a Nystrom-reduced metric, and the curvature quantity is a scalar proxy computed from the log-determinant of a leading 64-dimensional block of the full metric, normalized by its 95th percentile. Its magnitude should be read as relative variation across windows, not absolute curvature.
+- The quantum fidelity kernel is computed on the training block and on test-to-train pairs by statevector simulation. Test-to-test entries use an RBF approximation on the VAR parameters, which does not affect KRR predictions. Behavior on quantum hardware has not been evaluated.
+- The HQG-SVM stress detector is weakly discriminative at this sample size and is reported as a preliminary result.
+
+## Installation
+
+Requires Python 3.10 or later and a FRED API key.
+
 ```bash
 git clone https://github.com/srisairamgautamb/Harmonic_Climate_finance.git
 cd Harmonic_Climate_finance
 chmod +x environment_setup.sh
 ./environment_setup.sh
+export FRED_API_KEY=<your key>
 ```
 
-### 3. Execution
-To run the full pipeline, simply execute the main orchestrator:
+Standard runs need roughly 16 GB of memory.
+
+## Usage
+
 ```bash
-python main.py
+python main.py --phases ALL          # full pipeline
+python main.py --phases B1 C1        # selected phases
+python main.py --skip A2             # skip data download
+python -m pytest tests               # unit tests
 ```
-To run specific phases (e.g., Phase J for visualization):
-```bash
-python main.py --phases J1
-```
 
----
+Run summaries are written to `outputs/pipeline_run_summary.json`, model results to JSON under `outputs/phase_*/`, and figures to `outputs/phase_J/figures/`.
 
-## 📈 Key Findings & Output Metrics
-
-- **Causality Topology:** Socioeconomic drivers exhibit the strongest, most immediate causal effect on financial risk (Spectral GC ≈ 7.2), with transmission tightly localized to high-frequency domains (periodicity ≈ 0.3-0.4 months). 
-- **Topological Flatness:** The Ricci curvature of the economic manifold evaluates exactly to zero (`max|Ric| = 0.00`), indicating that the systemic risk wave propagates without damping.
-- **Model Forensics (Diebold-Mariano):** The proposed formulation HQG-KRR model was empirically compared against standard macroeconomic autoregression (VAR). The DM test (`p-value = 0.650`) showed statistical equivalency in forecasting capability, while the HQG framework inherently offers deeper rigorous topological interpretability.
-
-*Note: All output model parameters, numerical forecasts (JSON/NPZ), and publication-ready charts (PDF) are saved to the `outputs/` directory.*
-
----
-
-## 📂 Project Structure
+## Repository layout
 
 ```text
-Harmonic_Climate_finance/
-├── config.py                 # Pipeline configuration and hyperparameters
-├── main.py                   # Master orchestrator
-├── *_models.py / *.py        # Core Phase A–J logic scripts
-├── outputs/                  # Local directory for generated model state artifacts
-│   ├── phase_H/              # Baseline benchmarks & evaluations
-│   ├── phase_I/              # HQG metrics & optimal hyperparameters
-│   └── phase_J/figures/      # Rendered publication-ready empirical figures
-├── data/                     # Raw and processed CSV data (git-ignored)
-└── requirements.txt          # Python dependencies
+config.py                 pipeline configuration and hyperparameters
+main.py                   orchestrator
+utils.py                  shared metrics, tests and I/O helpers
+data_*.py, preprocessing.py
+spectral_*.py, var_spectral_param.py
+harmonic_potential.py, kernel_construction.py, quantum_embedding.py
+topological_analysis.py, classical_baselines.py, hqg_models.py
+visualization.py
+tests/                    unit tests
+data/processed/           aligned and transformed series
+outputs/                  per-phase results and figures
 ```
 
----
+## License
 
-## 📝 License
-This project is open-source and available under the terms of the MIT License.
+MIT License.
